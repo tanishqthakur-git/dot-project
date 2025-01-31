@@ -9,7 +9,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
 
-  const router = useRouter();
+  const router =  useRouter();
   
 
   const handleLogin = async (e) => {

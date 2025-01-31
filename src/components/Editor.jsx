@@ -1,9 +1,11 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Editor from "@monaco-editor/react";
 import axios from "axios";
 
 export default function CodeEditor({ onChange, code, language }) {
+  const editorRef = useRef(null);
+
   const [theme, setTheme] = useState("vs-dark");
   const [isLoading, setIsLoading] = useState(false);
   const [updatedCode, setUpdatedCode] = useState(code);
@@ -29,6 +31,11 @@ export default function CodeEditor({ onChange, code, language }) {
       setIsLoading(false);
     }
   };
+
+  const onMount = (editor) => {
+    editorRef.current = editor;
+    editor.focus();
+  }
 
   return (
     <>
@@ -57,6 +64,7 @@ export default function CodeEditor({ onChange, code, language }) {
           defaultLanguage={language || "javascript"}
           value={updatedCode}
           onChange={(value) => setUpdatedCode(value)}
+          onMount={onMount}
           options={{
             wordWrap: "on",
             minimap: { enabled: false },
