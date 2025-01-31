@@ -18,9 +18,9 @@ export default function HomePage() {
         </p>
         <div className="flex justify-center gap-4">
           <Button className="bg-blue-500 hover:bg-blue-600">Start Coding</Button>
-          <Button className="bg-white text-gray-800 hover:bg-gray-100">
-  Sign Up / Log In
-</Button>
+          <Button onClick={() => window.location.href = "/register"} className="bg-white text-gray-800 hover:bg-gray-100">
+            Sign Up / Log In
+          </Button>
 
         </div>
       </section>
