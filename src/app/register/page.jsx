@@ -12,6 +12,18 @@ export default function SignUpPage() {
     const res = await signUpUser(email, password, displayName);
     if (!res.success) setError(res.error);
     console.log("costum user created", res);
+
+    if(res.success)
+      window.location.href = "/dashboard";
+  };
+
+  const handleSignInWithGoogle = async () => {
+    const res = await signInWithGoogle();
+    if (!res.success) setError(res.error);
+    console.log("costum user created", res);
+
+    if(res.success)
+      window.location.href = "/dashboard";
   };
 
   return (

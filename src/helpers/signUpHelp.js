@@ -68,7 +68,6 @@ export const signInWithGoogle = async () => {
             aiSuggestions: true,
           },
           snippets: [],
-          activityLog: [],
         });
       }
   
