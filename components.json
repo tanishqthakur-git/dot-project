@@ -6,7 +6,11 @@
   "tailwind": {
     "config": "tailwind.config.mjs",
     "css": "src/app/globals.css",
+<<<<<<< HEAD
+    "baseColor": "zinc",
+=======
     "baseColor": "neutral",
+>>>>>>> 5e56588aaa7d71d4bf3e911edbb4614952853dec
     "cssVariables": true,
     "prefix": ""
   },
