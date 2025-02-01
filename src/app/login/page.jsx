@@ -1,8 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { loginWithEmailAndPassword, loginWithGoogle } from "@/helpers/loginHelp"; // Path to Google Login function
+import { loginWithEmailAndPassword, loginWithGoogle } from "@/helpers/loginHelp";
 import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -11,16 +15,14 @@ const Login = () => {
 
   const router = useRouter();
   
-
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       const user = await loginWithEmailAndPassword(email, password);
       console.log("Logged in as:", user.email);
-      // Redirect to the dashboard or other page
-      if(user) router.push("/dashboard");
+      if (user) router.push("/dashboard");
     } catch (error) {
-      setError(error.message); // Display error message to the user
+      setError(error.message);
     }
   };
 
@@ -28,55 +30,35 @@ const Login = () => {
     try {
       const user = await loginWithGoogle();
       console.log("Logged in with Google:", user.displayName);
-      // Redirect to the dashboard or other page
-      if(user) router.push("/dashboard");
+      if (user) router.push("/dashboard");
     } catch (error) {
-      setError(error.message); // Display error message to the user
+      setError(error.message);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <h1 className="text-3xl font-bold mb-4">Login</h1>
-      
-      <div className="mb-4">
-        {/* Google Login */}
-        <button
-          onClick={handleGoogleLogin}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg mb-4"
-        >
-          Login with Google
-        </button>
-      </div>
-      
-      <div className="mb-4">
-        {/* Email Login */}
-        <form onSubmit={handleLogin}>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            className="px-4 py-2 mb-2 border rounded-lg w-64"
-            required
-          />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            className="px-4 py-2 mb-2 border rounded-lg w-64"
-            required
-          />
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <button
-            type="submit"
-            className="px-4 py-2 bg-green-500 text-white rounded-lg w-64"
-          >
-            Login with Email
-          </button>
-        </form>
-      </div>
+    <div className="flex justify-center items-center h-screen bg-[#0f172a] text-white">
+      <Card className="w-96 bg-[#1e293b] border border-gray-500 shadow-2xl rounded-lg">
+        <CardHeader>
+          <CardTitle className="text-center text-xl font-bold text-white">Login</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+          <form onSubmit={handleLogin} className="space-y-4">
+            <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-white text-black border border-gray-300" required />
+            <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="bg-white text-black border border-gray-300" required />
+            <Button type="submit" className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold">
+              Login with Email
+            </Button>
+          </form>
+          <Button onClick={handleGoogleLogin} className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold">
+            Login with Google
+          </Button>
+          <p className="text-center text-sm text-gray-300">
+            Don't have an account? <Link href="/register" className="text-blue-400 hover:text-blue-500 hover:underline">Sign Up</Link>
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 };
