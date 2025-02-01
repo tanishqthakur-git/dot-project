@@ -15,6 +15,7 @@ export default function CodeEditor({ onChange, code, language }) {
   const [isFixing, setIsFixing] = useState(false)
   const monaco = useMonaco();
   const timeoutRef = useRef(null);
+  const lastApiCallRef = useRef(0);
   const [codeLanguage, setcodeLanguage] = useState('javascript')
   const editorRef = useRef();
 
@@ -30,81 +31,115 @@ export default function CodeEditor({ onChange, code, language }) {
     editor.focus();
   };
 
-  useEffect(() => {
-    setUpdatedCode(code); // Reset when new code is provided
-  }, [code]);
 
-  useEffect(() => {
-    if (!monaco) return;
+  // useEffect(() => {
+  //   if (!monaco || !editorRef.current) return;
 
-    console.log("✅ Monaco is ready! Registering auto-complete...");
+  //   console.log("✅ Monaco is ready! Registering auto-complete...");
 
-    monaco.languages.registerCompletionItemProvider(language || "javascript", {
-      provideCompletionItems: async (model, position) => {
-        const textUntilPosition = model.getValueInRange({
-          startLineNumber: 1,
-          startColumn: 1,
-          endLineNumber: position.lineNumber,
-          endColumn: position.column,
-        });
+  //   const providerRef =  monaco.languages.registerInlineCompletionsProvider(codeLanguage, {
+  //     provideInlineCompletions: async (model, position) => {
+  //       const textUntilPosition = model.getValueInRange({
+  //         startLineNumber: 1,
+  //         startColumn: 1,
+  //         endLineNumber: position.lineNumber,
+  //         endColumn: position.column,
+  //       });
 
-        console.log("🚀 Sending request to API with:", textUntilPosition);
+  //       const currentTime = Date.now();
+  //       if (currentTime - lastApiCallRef.current < 1000) return { items: [] };
+  //       lastApiCallRef.current = currentTime;
+  //       console.log("hello");
+        
 
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+  //       if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
-        return new Promise((resolve) => {
-          timeoutRef.current = setTimeout(async () => {
-            try {
-              const res = await axios.post("/api/auto-complete", { code: textUntilPosition });
+  //       return new Promise((resolve) => {
+  //         timeoutRef.current = setTimeout(async () => {
+  //           try {
+  //             const res = await axios.post("/api/auto-complete", { code: textUntilPosition, language: codeLanguage });
+  //             let suggestion = res.data.completedCode?.trim();
+  //             if (!suggestion) return resolve({ items: [] });
 
-              console.log("✅ API Response:", res.data);
+  //             suggestion = suggestion.replace(/```[\s\S]*?\n([\s\S]*?)```/, "$1");
+  //             console.log(suggestion);
+              
 
-              const suggestion = res.data.completedCode;
+  //             const currentLine = model.getLineContent(position.lineNumber);
 
-              if (!suggestion) return resolve({ suggestions: [] });
+  //             resolve({
+  //               items: [
+  //                 {
+  //                   insertText: suggestion,
+  //                   range: new monaco.Range(
+  //                     position.lineNumber,
+  //                     1,
+  //                     position.lineNumber,
+  //                     currentLine.length + 1
+  //                   ),
+  //                   insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+  //                 },
+  //               ],
+  //             });
 
-              resolve({
-                suggestions: [
-                  {
-                    label: suggestion,
-                    kind: monaco.languages.CompletionItemKind.Snippet,
-                    insertText: suggestion,
-                    documentation: "AI-generated auto-complete suggestion",
-                    range: new monaco.Range(
-                      position.lineNumber,
-                      position.column,
-                      position.lineNumber,
-                      position.column
-                    ),
-                  },
-                ],
-              });
-            } catch (error) {
-              console.error("❌ Auto-complete error:", error);
-              resolve({ suggestions: [] });
-            }
-          }, 300); // ✅ Debounce AI calls (wait 500ms)
-        });
-      },
-    });
+  //            if (editorRef.current) {
+  //             setTimeout(() => {
+  //               editorRef.current.trigger("keyboard", "editor.action.inlineSuggest.trigger", {});
+  //             }, 10);
+  //           }
+              
+  //           } catch (error) {
+  //             console.error("❌ Auto-complete error:", error);
+  //             resolve({ items: [] });
+  //           }
+  //         }, 300);
+  //       });
+  //     },
+  //   });
 
-    monaco.editor.onDidCreateModel((model) => {
-      console.log("📄 Editor Model Created:", model);
-    });
-  }, [monaco, language]); // ✅ Runs only when `monaco` or `language` changes
+  //   const editor = editorRef.current;
+  // const keyListener = editor.onKeyDown((e) => {
+  //   if (e.keyCode === monaco.KeyCode.Enter) {
+  //     // ⬇️ Check if default suggestions are open
+  //     const suggestWidgetVisible = editor.getContribution("editor.contrib.suggestController").widget.value?.isVisible();
+  //     if (!suggestWidgetVisible) {
+  //       // ⬇️ If no default suggestion, hide inline suggestions
+  //       setTimeout(() => {
+  //         editor.trigger("keyboard", "editor.action.inlineSuggest.hide", {});
+  //       }, 50);
+  //     }
+  //   }
+
+  //   if (e.keyCode === monaco.KeyCode.Tab) {
+  //     // ⬇️ Accept inline AI suggestion when pressing Tab
+  //     editor.trigger("keyboard", "editor.action.inlineSuggest.commit", {});
+  //     e.preventDefault(); // Stop Tab from adding indentation
+  //   }
+  // });
+
+  // // ✅ Cleanup: Dispose provider and key listener
+  // return () => {
+  //   providerRef.dispose();
+  //   keyListener.dispose();
+  // };
+  // }, [monaco, codeLanguage, updatedCode]);
+
+
 
 
   // Generate documentation and append as comments
   const generateDocs = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.post("/api/generate-documentation", { code: updatedCode });
+      const res = await axios.post("/api/generate-documentation", { code: updatedCode, language: codeLanguage });
       const documentation = res.data.documentation;
+      console.log("Documentation: ", documentation);
+      
 
       // Append documentation as comments at the end of the file
       const commentedDocs = `\n\n${documentation}`;
       setUpdatedCode((prevCode) => prevCode + commentedDocs);
-      onChange(updatedCode + commentedDocs); // Update parent state if necessary
+      //onChange(updatedCode + commentedDocs); // Update parent state if necessary
     } catch (error) {
       console.error("Failed to generate documentation:", error);
     } finally {
@@ -190,16 +225,30 @@ export default function CodeEditor({ onChange, code, language }) {
               defaultValue={CODE_SNIPPETS[language]}
               value={updatedCode}
               onMount={onMount}
-              onChange={(value) => setUpdatedCode(value)}
+              onChange={(value) => {
+                setUpdatedCode(value);
+                if (editorRef.current) {
+                  editorRef.current.trigger("keyboard", "cancelSuggestWidget", {});
+                }
+              }}
+              
               options={{
                 wordWrap: "on",
                 minimap: { enabled: false },
                 bracketPairColorization: true,
                 suggest: { preview: true },
+                inlineSuggest: {
+                  enabled: true,
+                  showToolbar: 'onHover',
+                  mode: 'subword',
+                  suppressSuggestions: false,
+                },
+                quickSuggestions: { other: true, comments: false, strings: true },
+                suggestSelection:"recentlyUsed",
               }}
             />
           </Box>
-          <Output editorRef={editorRef} language={codeLanguage}/>
+          <Output editorRef={editorRef} language={codeLanguage} />
         </HStack>
       </Box>
     </>
