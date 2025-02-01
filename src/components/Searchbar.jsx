@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { collection, query, where, getDocs, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { getAuth } from "firebase/auth"; // Import Firebase Auth
 import { db } from "@/config/firebase";
-import { Button, Input, Box, VStack, HStack, Text, Spinner } from "@chakra-ui/react";
 
 export default function SearchBar({ workspaceId }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -62,23 +61,28 @@ export default function SearchBar({ workspaceId }) {
   };
 
   return (
-    <Box p={4} w="100%">
-      <Input
+    <div className=" w-[40%] h-full overflow-y-auto">
+      <input
+        type="text"
         placeholder="Search users by email..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
+        className="mb-4 p-2 w-full border border-gray-300 rounded-md focus:outline-none"
       />
-      {loading && <Spinner size="sm" mt={2} />}
-      <VStack mt={2} align="start">
+      {loading && <div className="mb-4 text-center">Loading...</div>}
+      <div className="mt-2 max-h-[60vh] overflow-y-auto">
         {users.map((user) => (
-          <HStack key={user.id} w="100%" justify="space-between">
-            <Text>{user.email}</Text>
-            <Button colorScheme="blue" size="sm" onClick={() => inviteUser(user.id, user.email)}>
+          <div key={user.id} className="flex justify-between items-center p-2 bg-gray-800 rounded-md mb-2">
+            <span>{user.email}</span>
+            <button
+              className="px-4 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              onClick={() => inviteUser(user.id, user.email)}
+            >
               Invite
-            </Button>
-          </HStack>
+            </button>
+          </div>
         ))}
-      </VStack>
-    </Box>
+      </div>
+    </div>
   );
 }

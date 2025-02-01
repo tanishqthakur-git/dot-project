@@ -23,10 +23,7 @@ const Output = ({ editorRef, language }) => {
   };
 
   return (
-    <Box w="50%">
-      <Text mb={2} fontSize="lg">
-        Output
-      </Text>
+    <Box w="20%">
       <Button
         variant="outline"
         colorScheme="green"

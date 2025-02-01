@@ -139,7 +139,7 @@ export default function CodeEditor({ file }) {
 
 
   return (
-    <>
+    <div className="bg-green-400">
       {/* Controls Section */}
       <div className="flex gap-4 mb-4">
         <button
@@ -176,7 +176,7 @@ export default function CodeEditor({ file }) {
       {/* Code Editor */}
       <Box>
         <HStack spacing={4}>
-          <Box w="50%">
+          <Box w="80%">
             <LanguageSelector language={codeLanguage} onSelect={onSelect} />
             <Editor
               height="500px"
@@ -197,6 +197,6 @@ export default function CodeEditor({ file }) {
           <Output editorRef={editorRef} language={codeLanguage}/>
         </HStack>
       </Box>
-    </>
+    </div>
   );
 }
