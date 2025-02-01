@@ -5,12 +5,20 @@ import { collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore"
 import { db, auth } from "@/config/firebase";
 import { Folder, File, PlusCircle, Trash, ChevronDown, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const NavPanel = ({ workspaceId, openFile }) => {
   const [folders, setFolders] = useState([]);
   const [files, setFiles] = useState([]);
   const [folderStates, setFolderStates] = useState({});
   const [userRole, setUserRole] = useState(null);
+  const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
+  const [isFileDialogOpen, setIsFileDialogOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [newFileName, setNewFileName] = useState("");
+  const [currentFolderId, setCurrentFolderId] = useState(null);  // Tracking folder for file creation
   const router = useRouter();
 
   // Fetch folders and files
@@ -22,14 +30,13 @@ const NavPanel = ({ workspaceId, openFile }) => {
         return;
       }
 
-     // Fetch role
+      // Fetch role
       const membersSnapshot = await getDocs(collection(db, `workspaces/${workspaceId}/members`));
-      const membersData = membersSnapshot.docs.map((doc) => doc.data()); // Convert docs to data array
-      const member = membersData.find((m) => m.userId === user.uid); // Find the current user's entry
+      const membersData = membersSnapshot.docs.map((doc) => doc.data());
+      const member = membersData.find((m) => m.userId === user.uid);
       if (member) {
         setUserRole(member.role);
       }
-
 
       // Fetch folders
       const foldersSnapshot = await getDocs(collection(db, `workspaces/${workspaceId}/folders`));
@@ -59,44 +66,38 @@ const NavPanel = ({ workspaceId, openFile }) => {
     }));
   };
 
-  // Create a folder
-const createFolder = async () => {
-  const name = prompt("Enter folder name:");
-  if (!name) return;
-  const docRef = await addDoc(collection(db, `workspaces/${workspaceId}/folders`), { name });
-  setFolders([...folders, { id: docRef.id, name }]);
-  setFolderStates((prevState) => ({ ...prevState, [docRef.id]: false }));
-};
+  // Create a folder (using dialog)
+  const createFolder = async () => {
+    if (!newFolderName) return;
+    const docRef = await addDoc(collection(db, `workspaces/${workspaceId}/folders`), { name: newFolderName });
+    setFolders([...folders, { id: docRef.id, name: newFolderName }]);
+    setFolderStates((prevState) => ({ ...prevState, [docRef.id]: false }));
+    setNewFolderName(""); // Clear input
+    setIsFolderDialogOpen(false); // Close dialog
+  };
 
-// Create a file (outside folders)
-const createFile = async () => {
-  const name = prompt("Enter file name:");
-  if (!name) return;
-  const docRef = await addDoc(collection(db, `workspaces/${workspaceId}/files`), { 
-    name, 
-    folderId: null,
-    workspaceId 
-  });
-  setFiles([...files, { id: docRef.id, name, folderId: null, workspaceId }]);
-};
+  // Create a file (under a specific folder or outside any folder)
+  const createFile = async () => {
+    if (!newFileName) return;
 
-// Create a file inside a folder
-const createFileInFolder = async (folderId) => {
-  const name = prompt("Enter file name:");
-  if (!name) return;
-  const docRef = await addDoc(collection(db, `workspaces/${workspaceId}/files`), { 
-    name, 
-    folderId, 
-    workspaceId 
-  });
-  setFiles([...files, { id: docRef.id, name, folderId, workspaceId }]);
-  if(!folderStates[folderId]) toggleFolder(folderId);
-};
+    // If currentFolderId is set, create the file under that folder, otherwise create it outside any folder
+    const folderId = currentFolderId || null;
 
+    const docRef = await addDoc(collection(db, `workspaces/${workspaceId}/files`), {
+      name: newFileName,
+      folderId: folderId, // Set folderId to null if creating outside any folder
+      workspaceId
+    });
+
+    // Update files state and reset the file creation input
+    setFiles((prevFiles) => [...prevFiles, { id: docRef.id, name: newFileName, folderId: folderId, workspaceId }]);
+    setNewFileName(""); // Clear input
+    setIsFileDialogOpen(false); // Close dialog
+    setCurrentFolderId(null); // Reset folder context
+  };
 
   // Delete a folder or file
   const deleteItem = async (type, id) => {
-    
     await deleteDoc(doc(db, `workspaces/${workspaceId}/${type}/${id}`));
 
     if (type === "folders") {
@@ -107,17 +108,16 @@ const createFileInFolder = async (folderId) => {
   };
 
   return (
-    
-    <div className="bg-gray-800 text-white p-4 border-r border-gray-700">
+    <div className="bg-gray-900 text-white p-4 border-r border-gray-800">
       <h2 className="text-lg font-bold mb-4">Files & Folders</h2>
 
       {/* Create Folder & File Buttons */}
       {userRole === "contributor" || userRole === "owner" ? (
         <div className="mb-4 flex gap-2">
-          <button onClick={createFolder} className="flex items-center bg-blue-600 px-2 py-1 rounded-md">
+          <button onClick={() => setIsFolderDialogOpen(true)} className="flex items-center bg-blue-600 px-2 py-1 rounded-md hover:bg-blue-500">
             <PlusCircle size={16} className="mr-1" /> Folder
           </button>
-          <button onClick={createFile} className="flex items-center bg-green-600 px-2 py-1 rounded-md">
+          <button onClick={() => setIsFileDialogOpen(true)} className="flex items-center bg-green-600 px-2 py-1 rounded-md hover:bg-green-500">
             <PlusCircle size={16} className="mr-1" /> File
           </button>
         </div>
@@ -139,7 +139,10 @@ const createFileInFolder = async (folderId) => {
                     <PlusCircle
                       size={16}
                       className="cursor-pointer text-green-500"
-                      onClick={() => createFileInFolder(folder.id)}
+                      onClick={() => {
+                        setCurrentFolderId(folder.id); // Set the folder ID for file creation
+                        setIsFileDialogOpen(true); // Open file creation dialog
+                      }}
                     />
                     <Trash size={16} className="cursor-pointer text-red-500" onClick={() => deleteItem("folders", folder.id)} />
                   </>
@@ -175,7 +178,7 @@ const createFileInFolder = async (folderId) => {
         {files
           .filter((file) => !file.folderId)
           .map((file) => (
-            <li key={file.id} className="mb-2 flex justify-between items-center cursor-pointer" >
+            <li key={file.id} className="mb-2 flex justify-between items-center cursor-pointer">
               <span className="flex items-center" onClick={() => openFile(file)}>
                 <File size={16} className="mr-2" /> {file.name}
               </span>
@@ -185,6 +188,45 @@ const createFileInFolder = async (folderId) => {
             </li>
           ))}
       </ul>
+
+      {/* ShadCN Modals for Folder & File Creation */}
+      <Dialog open={isFolderDialogOpen} onOpenChange={setIsFolderDialogOpen}>
+        <DialogContent>
+          <DialogTitle>Create Folder</DialogTitle>
+          <DialogDescription>
+            <Input
+              placeholder="Folder Name"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              className="mb-4"
+            />
+            <div className="flex gap-4">
+              <Button onClick={createFolder} className="bg-blue-600 hover:bg-blue-500">Create</Button>
+              <Button onClick={() => setIsFolderDialogOpen(false)} className="bg-gray-600 hover:bg-gray-700">Cancel</Button>
+            </div>
+          </DialogDescription>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isFileDialogOpen} onOpenChange={setIsFileDialogOpen}>
+        <DialogContent>
+          <DialogTitle>Create File</DialogTitle>
+          <DialogDescription>
+            <Input
+              placeholder="File Name"
+              value={newFileName}
+              onChange={(e) => setNewFileName(e.target.value)}
+              className="mb-4"
+            />
+            <div className="flex gap-4">
+              <Button onClick={createFile} className="bg-blue-600 hover:bg-blue-500">
+                Create
+              </Button>
+              <Button onClick={() => setIsFileDialogOpen(false)} className="bg-gray-600 hover:bg-gray-700">Cancel</Button>
+            </div>
+          </DialogDescription>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
