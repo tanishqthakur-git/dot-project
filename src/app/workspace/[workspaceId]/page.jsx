@@ -7,7 +7,7 @@ import { db } from "@/config/firebase";
 import Chat from "@/components/Chat";
 import Editor from "@/components/Editor";
 import NavPanel from "@/components/NavPanel";
-import { useState } from "react";
+
 import Header from "@/components/Header";
 import { Menu } from "lucide-react";
 
@@ -15,7 +15,8 @@ const Workspace = () => {
   const { workspaceId } = useParams(); // Get workspaceId from URL
   const [selectedFile, setSelectedFile] = useState(null);
   const [workspaceName, setWorkspaceName] = useState("");
-  const [isChatOpen, setIsChatOpen] = useState(false); // To toggle the chat panel
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isNavOpen, setIsNavOpen] = useState(false); // To toggle the chat panel
 
   useEffect(() => {
     const fetchWorkspace = async () => {
