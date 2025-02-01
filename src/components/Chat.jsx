@@ -20,22 +20,17 @@ function Chatroom({ workspaceId }) {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [chatVisible, setChatVisible] = useState(true);
-  const userId = "your-logged-in-user-id"; // Always set to the logged-in user's ID
+  const userId = "your-logged-in-user-id"; // Replace with actual logged-in user ID
 
   const messagesRef = collection(firestore, "messages");
-  const messagesQuery = query(
-    collection(firestore, "messages"),
-    orderBy("createdAt"),
-    limit(25)
-  );
+  const messagesQuery = query(messagesRef, orderBy("createdAt"), limit(25));
 
-  // Fetch workspace-specific messages
   const fetchMessages = async () => {
     setLoading(true);
     const querySnapshot = await getDocs(messagesQuery);
     const messagesData = querySnapshot.docs
       .map((doc) => ({ id: doc.id, ...doc.data() }))
-      .filter((msg) => msg.workspaceId === workspaceId); // Filter messages by workspace ID
+      .filter((msg) => msg.workspaceId === workspaceId);
     setMessages(messagesData);
     setLoading(false);
   };
@@ -49,16 +44,16 @@ function Chatroom({ workspaceId }) {
   const sendMessage = async () => {
     if (newMessage.trim() === "") return;
 
-    const imageUrl = "https://example.com/your-image.jpg"; // Example image URL
+    const imageUrl = "/robotic.png"; // Example image URL
 
     try {
       console.log("Sending message...");
       const docRef = await addDoc(messagesRef, {
         text: newMessage,
         createdAt: serverTimestamp(),
-        imageUrl: imageUrl,
-        userId: userId,
-        workspaceId: workspaceId, // Associate message with workspace
+        imageUrl,
+        userId,
+        workspaceId,
       });
 
       setMessages((prevMessages) => [
@@ -121,27 +116,40 @@ function Chatroom({ workspaceId }) {
         <Card className="w-full max-w-md">
           <CardContent>
             <h2 className="text-xl font-bold mb-4">Chatroom</h2>
+            
             <div className="space-y-2 mb-4">
-              {messages.length > 0 ? (
+              {messages.length === 0 ? (
+                <div className="flex flex-col items-center text-gray-500 py-4">
+                  <p>No messages yet...</p>
+                  <p className="text-sm">Start the conversation!</p>
+                </div>
+              ) : (
                 messages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`p-2 bg-gray-200 rounded-lg flex items-center ${
+                    className={`flex items-center gap-2 ${
                       msg.userId === userId ? "justify-end" : "justify-start"
                     }`}
                   >
-                    {msg.imageUrl && (
-                      <img
-                        src={msg.imageUrl}
-                        alt="User Avatar"
-                        className="w-10 h-10 rounded-full mr-3"
-                      />
+                    {msg.userId !== userId && (
+                      <img src={msg.imageUrl} alt="User Avatar" className="w-8 h-8 rounded-full" />
                     )}
-                    <span>{msg.text}</span>
+
+                    <div
+                      className={`p-2 max-w-[75%] rounded-lg ${
+                        msg.userId === userId
+                          ? "bg-blue-500 text-white self-end text-right"
+                          : "bg-gray-300 text-black self-start text-left"
+                      }`}
+                    >
+                      {msg.text}
+                    </div>
+
+                    {msg.userId === userId && (
+                      <img src={msg.imageUrl} alt="User Avatar" className="w-8 h-8 rounded-full" />
+                    )}
                   </div>
                 ))
-              ) : (
-                <p className="text-gray-500">No messages yet...</p>
               )}
             </div>
 
