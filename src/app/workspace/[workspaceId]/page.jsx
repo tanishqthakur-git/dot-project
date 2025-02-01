@@ -64,6 +64,7 @@ const Workspace = () => {
         >
           {isNavOpen && (
             <section className="p-4 pt-14">
+              
               <NavPanel workspaceId={workspaceId} openFile={setSelectedFile} />
             </section>
           )}
