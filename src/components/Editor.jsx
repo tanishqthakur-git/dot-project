@@ -1,7 +1,11 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import Editor, {useMonaco} from "@monaco-editor/react";
+import Editor, { useMonaco } from "@monaco-editor/react";
 import axios from "axios";
+import LanguageSelector from "./LanguageSelector";
+import { CODE_SNIPPETS } from "@/constants";
+import { Box, HStack } from "@chakra-ui/react";
+import Output from "./Output";
 
 export default function CodeEditor({ onChange, code, language }) {
   const [theme, setTheme] = useState("vs-dark");
@@ -11,7 +15,20 @@ export default function CodeEditor({ onChange, code, language }) {
   const [isFixing, setIsFixing] = useState(false)
   const monaco = useMonaco();
   const timeoutRef = useRef(null);
+  const [codeLanguage, setcodeLanguage] = useState('javascript')
+  const editorRef = useRef();
 
+  const onSelect = (codeLanguage) => {
+    setcodeLanguage(codeLanguage)
+    setUpdatedCode(
+      CODE_SNIPPETS[codeLanguage]
+    )
+  }
+
+  const onMount = (editor) => {
+    editorRef.current = editor;
+    editor.focus();
+  };
 
   useEffect(() => {
     setUpdatedCode(code); // Reset when new code is provided
@@ -19,7 +36,7 @@ export default function CodeEditor({ onChange, code, language }) {
 
   useEffect(() => {
     if (!monaco) return;
-    
+
     console.log("✅ Monaco is ready! Registering auto-complete...");
 
     monaco.languages.registerCompletionItemProvider(language || "javascript", {
@@ -159,24 +176,32 @@ export default function CodeEditor({ onChange, code, language }) {
           {isLoading ? "Fixing..." : "Fix Syntax"}
         </button>
       </div>
-  
+
 
       {/* Code Editor */}
-      <div className="editor-container">
-        <Editor
-          height="500px"
-          theme={theme}
-          defaultLanguage={language || "javascript"}
-          value={updatedCode}
-          onChange={(value) => setUpdatedCode(value)}
-          options={{
-            wordWrap: "on",
-            minimap: { enabled: false },
-            bracketPairColorization: true,
-            suggest: { preview: true },
-          }}
-        />
-      </div>
+      <Box>
+        <HStack spacing={4}>
+          <Box w="50%">
+            <LanguageSelector language={codeLanguage} onSelect={onSelect} />
+            <Editor
+              height="500px"
+              theme={theme}
+              language={codeLanguage}
+              defaultValue={CODE_SNIPPETS[language]}
+              value={updatedCode}
+              onMount={onMount}
+              onChange={(value) => setUpdatedCode(value)}
+              options={{
+                wordWrap: "on",
+                minimap: { enabled: false },
+                bracketPairColorization: true,
+                suggest: { preview: true },
+              }}
+            />
+          </Box>
+          <Output editorRef={editorRef} language={codeLanguage}/>
+        </HStack>
+      </Box>
     </>
   );
 }

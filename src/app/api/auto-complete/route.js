@@ -11,7 +11,7 @@ export async function POST(request) {
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        const prompt = `Complete the latest line of code based on the context of the whole code:  :\n\n${code}\n\nOnly return the suggested next line without any explanation or extra text.`;
+        const prompt = `Complete the latest line of code based on the context of the whole code:  :\n\n${code}\n\n return without any explanation or extra text. try to guess as big as possible`;
 
         const result = await model.generateContent(prompt);
         const completedCode = result.response.text() || "No documentation generated.";
