@@ -9,9 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ark-ui/react": "^4.9.1",
     "@chakra-ui/react": "^3.5.1",
     "@google/generative-ai": "^0.21.0",
     "@monaco-editor/react": "^4.6.0",
+    "@radix-ui/react-avatar": "^1.1.2",
+    "@radix-ui/react-dialog": "^1.1.5",
     "@radix-ui/react-label": "^2.1.1",
     "@radix-ui/react-slot": "^1.1.1",
     "axios": "^1.7.9",

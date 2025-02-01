@@ -3,6 +3,10 @@
 import React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import logout from "@/helpers/logoutHelp";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import Link from "next/link";
+
 
 const Header = () => {
   const pathname = usePathname();
@@ -13,25 +17,28 @@ const Header = () => {
   };
 
   return (
-    <header className="flex items-center justify-between p-4 bg-gray-800 text-white">
+    <header className="flex items-center justify-between p-4 bg-[#1e293b] text-white shadow-lg">
       <h1 className="text-2xl font-bold">AI Code Editor</h1>
       
-      <div className="flex gap-4">
+      <div className="flex items-center gap-4">
         {pathname.startsWith("/workspace/") && (
-          <button
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-            onClick={goToDashboard}
-          >
+          <Button onClick={goToDashboard} className="bg-blue-500 hover:bg-blue-600">
             Go to Dashboard
-          </button>
+          </Button>
         )}
-
-        <button
-          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
-          onClick={logout}
-        >
+        
+        <Button onClick={logout} className="bg-red-500 hover:bg-red-600">
           Logout
-        </button>
+        </Button>
+        
+        {/* Wrap the Avatar component in a Link */}
+        <Link href="/profile">
+          <Avatar className="w-10 h-10 cursor-pointer border-2 border-white">
+          <AvatarImage src="/robotic.png" alt="Profile" />
+
+            <AvatarFallback>U</AvatarFallback>
+          </Avatar>
+        </Link>
       </div>
     </header>
   );
