@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { toast, ToastContainer } from "react-toastify"; // Import Toast
+import "react-toastify/dist/ReactToastify.css"; // Import Toast styles
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -52,10 +54,11 @@ const Profile = () => {
     try {
       await sendPasswordResetEmail(auth, email);
       setSuccessMessage("Password reset email sent successfully. Please check your inbox.");
-      alert("Password reset link sent to your email!");
+      toast.success("Password reset link sent to your email!"); // Show success toast
       setIsDialogOpen(false);
     } catch (error) {
       setErrorMessage("Error sending password reset email: " + error.message);
+      toast.error("Error sending password reset email: " + error.message); // Show error toast
     } finally {
       setIsLoading(false);
     }
@@ -80,9 +83,10 @@ const Profile = () => {
 
       // Update UI
       setInvites(invites.filter((id) => id !== workspaceId));
-      alert("You have joined the workspace as a contributor!");
+      toast.success("You have joined the workspace as a contributor!"); // Success toast
     } catch (error) {
       console.error("Error accepting invite:", error);
+      toast.error("Error accepting invite!"); // Error toast
     }
   };
 
@@ -97,9 +101,10 @@ const Profile = () => {
 
       // Update UI
       setInvites(invites.filter((id) => id !== workspaceId));
-      alert("Invite deleted successfully.");
+      toast.success("Invite deleted successfully."); // Success toast
     } catch (error) {
       console.error("Error deleting invite:", error);
+      toast.error("Error deleting invite!"); // Error toast
     }
   };
 
@@ -187,6 +192,9 @@ const Profile = () => {
           <p>Loading...</p>
         )}
       </div>
+
+      {/* Toast Container for notifications */}
+      <ToastContainer position="top-right" theme="dark" />
     </div>
   );
 };
