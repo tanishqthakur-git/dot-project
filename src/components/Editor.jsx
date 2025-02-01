@@ -28,14 +28,12 @@ export default function CodeEditor({ file }) {
 
   const fetchFileContent = async () => {
     if (!file?.id || !file?.workspaceId) return;
-
     try {
-      const filePath = file.folderId
-        ? `workspaces/${file.workspaceId}/folders/${file.folderId}/files`
-        : `workspaces/${file.workspaceId}/files`;
-
+      const filePath = `workspaces/${file.workspaceId}/files`;
       const fileRef = doc(db, filePath, file.id);
       const fileSnap = await getDoc(fileRef);
+
+      console.log("✅ Fetched file content:", fileSnap.data());
 
       if (fileSnap.exists()) {
         setUpdatedCode(fileSnap.data().content || "");
@@ -45,19 +43,21 @@ export default function CodeEditor({ file }) {
     }
   };
 
+
   const handleEditorChange = (value) => {
     setUpdatedCode(value);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => autoSaveFile(value), 5000);
+    timeoutRef.current = setTimeout(() => autoSaveFile(value), 2000);
   };
+
 
   const autoSaveFile = async (content) => {
     if (!file?.id || !file?.workspaceId) return;
 
+    console.log("🚀 Auto-saving file...");
+
     try {
-      const filePath = file.folderId
-        ? `workspaces/${file.workspaceId}/folders/${file.folderId}/files`
-        : `workspaces/${file.workspaceId}/files`;
+      const filePath = `workspaces/${file.workspaceId}/files`;
 
       const fileRef = doc(db, filePath, file.id);
       await updateDoc(fileRef, { content });
@@ -68,7 +68,6 @@ export default function CodeEditor({ file }) {
     }
   };
  
-
   const onSelect = (codeLanguage) => {
     setcodeLanguage(codeLanguage)
     setUpdatedCode(
@@ -80,66 +79,6 @@ export default function CodeEditor({ file }) {
     editorRef.current = editor;
     editor.focus();
   };
-
-
-  useEffect(() => {
-    if (!monaco) return;
-
-    console.log("✅ Monaco is ready! Registering auto-complete...");
-
-    monaco.languages.registerCompletionItemProvider(codeLanguage || "javascript", {
-      provideCompletionItems: async (model, position) => {
-        const textUntilPosition = model.getValueInRange({
-          startLineNumber: 1,
-          startColumn: 1,
-          endLineNumber: position.lineNumber,
-          endColumn: position.column,
-        });
-
-        console.log("🚀 Sending request to API with:", textUntilPosition);
-
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-
-        return new Promise((resolve) => {
-          timeoutRef.current = setTimeout(async () => {
-            try {
-              const res = await axios.post("/api/auto-complete", { code: textUntilPosition });
-
-              console.log("✅ API Response:", res.data);
-
-              const suggestion = res.data.completedCode;
-
-              if (!suggestion) return resolve({ suggestions: [] });
-
-              resolve({
-                suggestions: [
-                  {
-                    label: suggestion,
-                    kind: monaco.languages.CompletionItemKind.Snippet,
-                    insertText: suggestion,
-                    documentation: "AI-generated auto-complete suggestion",
-                    range: new monaco.Range(
-                      position.lineNumber,
-                      position.column,
-                      position.lineNumber,
-                      position.column
-                    ),
-                  },
-                ],
-              });
-            } catch (error) {
-              console.error("❌ Auto-complete error:", error);
-              resolve({ suggestions: [] });
-            }
-          }, 300); // ✅ Debounce AI calls (wait 500ms)
-        });
-      },
-    });
-
-    monaco.editor.onDidCreateModel((model) => {
-      console.log("📄 Editor Model Created:", model);
-    });
-  }, [monaco, codeLanguage]); // ✅ Runs only when `monaco` or `language` changes
 
 
   // Generate documentation and append as comments
@@ -226,6 +165,13 @@ export default function CodeEditor({ file }) {
         </button>
       </div>
 
+       {/* Current File Display */}
+       {file && (
+        <div className="bg-gray-800 text-white px-4 py-2 rounded flex items-center justify-between w-full mb-2">
+          <span className="text-sm">📝 Editing: {file.name}</span>
+        </div>
+      )}
+
 
       {/* Code Editor */}
       <Box>
@@ -239,7 +185,7 @@ export default function CodeEditor({ file }) {
               defaultValue={CODE_SNIPPETS[codeLanguage]}
               value={updatedCode}
               onMount={onMount}
-              onChange={(value) => setUpdatedCode(value)}
+              onChange={handleEditorChange}
               options={{
                 wordWrap: "on",
                 minimap: { enabled: false },
