@@ -27,14 +27,25 @@ const Dashboard = () => {
       try {
         const workspaceQuery = query(
           collection(db, "workspaces"),
-          where("members", "array-contains", user.uid) // Fetch workspaces where the user is a member (owner or contributor)
+          where("members", "array-contains", user.uid)
         );
         const querySnapshot = await getDocs(workspaceQuery);
     
-        const workspaceData = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const workspaceData = await Promise.all(
+          querySnapshot.docs.map(async (workspaceDoc) => {
+            const membersRef = collection(db, `workspaces/${workspaceDoc.id}/members`);
+            const membersSnapshot = await getDocs(membersRef);
+            
+            const userMemberData = membersSnapshot.docs.find((doc) => doc.data().userId === user.uid);
+            const role = userMemberData ? userMemberData.data().role : "Unknown";
+            
+            return {
+              id: workspaceDoc.id,
+              ...workspaceDoc.data(),
+              role,
+            };
+          })
+        );
     
         setWorkspaces(workspaceData);
         setLoading(false);
@@ -58,14 +69,18 @@ const Dashboard = () => {
       return;
     }
 
-    const docRef = await addDoc(collection(db, "workspaces"), {
+    const workspaceRef = await addDoc(collection(db, "workspaces"), {
       name,
       isPublic,
-      owner: user.uid,
-      members: [user.uid], // Ensure the owner is also added as a member
     });
 
-    setWorkspaces([...workspaces, { id: docRef.id, name, isPublic, owner: user.uid, members: [user.uid] }]);
+    const membersRef = collection(db, `workspaces/${workspaceRef.id}/members`);
+    await setDoc(doc(membersRef, user.uid), {
+      userId: user.uid,
+      role: "owner",
+    });
+
+    setWorkspaces([...workspaces, { id: workspaceRef.id, name, isPublic, role: "owner" }]);
   };
 
   const deleteWorkspace = async (workspaceId) => {
@@ -107,6 +122,7 @@ const Dashboard = () => {
                       <p className="text-sm text-gray-400">
                         {ws.isPublic ? "Public Workspace" : "Private Workspace"}
                       </p>
+                      <p className="text-xs text-yellow-400">Role: {ws.role}</p>
                     </Link>
 
                     <Button
