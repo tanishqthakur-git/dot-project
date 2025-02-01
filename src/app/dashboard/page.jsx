@@ -1,35 +1,152 @@
 "use client";
 import { useState, useEffect } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "@/config/firebase";
-import logout from "@/helpers/logoutHelp"; // Path to the logout function
+import { useRouter } from "next/navigation";
+import { auth, db } from "@/config/firebase";
+import { 
+  collection, addDoc, getDocs, doc, setDoc, deleteDoc, query 
+} from "firebase/firestore";
+import { PlusCircle, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import Header from "@/components/Header";
+import Link from "next/link";
 
 const Dashboard = () => {
-  const [user, setUser] = useState(null);
+  const [workspaces, setWorkspaces] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const user = auth.currentUser;
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-      } else {
-        setUser(null);
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    const fetchWorkspaces = async () => {
+      try {
+        // Step 1: Fetch all workspaces
+        const querySnapshot = await getDocs(collection(db, "workspaces"));
+    
+        // Step 2: Process each workspace
+        const workspaceData = await Promise.all(
+          querySnapshot.docs.map(async (workspaceDoc) => {
+            const membersRef = collection(db, `workspaces/${workspaceDoc.id}/members`);
+            const membersSnapshot = await getDocs(membersRef);
+            
+            // Step 3: Check if the user is a member
+            const userMemberData = membersSnapshot.docs.find((doc) => doc.data().userId === user.uid);
+            
+            if (!userMemberData) return null; // Skip if the user is not a member
+            
+            return {
+              id: workspaceDoc.id,
+              ...workspaceDoc.data(),
+              role: userMemberData.data().role || "Unknown",
+            };
+          })
+        );
+
+        // Filter out null values
+        setWorkspaces(workspaceData.filter(Boolean));
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching workspaces:", error);
+        setLoading(false);
       }
+    };
+    
+    fetchWorkspaces();
+  }, [user]);
+
+  const createWorkspace = async () => {
+    const name = prompt("Enter workspace name:");
+    if (!name) return;
+
+    const isPublic = window.confirm("Should this workspace be public?");
+    
+    if (!user) {
+      alert("You must be logged in to create a workspace.");
+      return;
+    }
+
+    // Step 1: Create a new workspace (without members array)
+    const workspaceRef = await addDoc(collection(db, "workspaces"), {
+      name,
+      isPublic,
     });
 
-    return () => unsubscribe();
-  }, []);
+    // Step 2: Add the user to the `members` subcollection
+    const membersRef = collection(db, `workspaces/${workspaceRef.id}/members`);
+    await setDoc(doc(membersRef, user.uid), {
+      userId: user.uid,
+      role: "owner",
+    });
+
+    // Step 3: Update local state
+    setWorkspaces([...workspaces, { id: workspaceRef.id, name, isPublic, role: "owner" }]);
+  };
+
+  const deleteWorkspace = async (workspaceId) => {
+    if (!window.confirm("Are you sure you want to delete this workspace?")) return;
+
+    try {
+      await deleteDoc(doc(db, `workspaces/${workspaceId}`));
+      setWorkspaces(workspaces.filter((ws) => ws.id !== workspaceId));
+    } catch (error) {
+      console.error("Error deleting workspace:", error);
+    }
+  };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <h1 className="text-3xl font-bold mb-4">
-        Welcome, {user ? user.displayName : "Guest"}!
-      </h1>
-      <button
-        onClick={logout}
-        className="px-4 py-2 bg-red-500 text-white rounded-lg"
-      >
-        Logout
-      </button>
+    <div className="h-screen w-screen bg-[#0F172A] text-white flex flex-col">
+      <Header />
+      
+      <div className="flex justify-between items-center p-6">
+        <h1 className="text-2xl font-bold text-blue-300">Your Workspaces</h1>
+        
+        <Button onClick={createWorkspace} className="bg-blue-600 hover:bg-blue-500">
+          <PlusCircle size={18} className="mr-2" /> Create Workspace
+        </Button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6">
+        {loading ? (
+          <p className="text-center text-gray-400">Loading workspaces...</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {workspaces.length === 0 ? (
+              <p className="text-gray-400 col-span-3 text-center">No workspaces found. Create one!</p>
+            ) : (
+              workspaces.map((ws) => (
+                <Card key={ws.id} className="relative group bg-[#1E293B] border border-blue-500">
+                  <CardContent className="p-4">
+                    <Link href={`/workspace/${ws.id}`} className="block">
+                      <h2 className="text-lg font-semibold text-blue-300">{ws.name}</h2>
+                      <p className="text-sm text-gray-400">
+                        {ws.isPublic ? "Public Workspace" : "Private Workspace"}
+                      </p>
+                      <p className="text-xs text-yellow-400">Role: {ws.role}</p>
+                    </Link>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 text-red-500 hover:text-red-700 hidden group-hover:block"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        deleteWorkspace(ws.id);
+                      }}
+                    >
+                      <Trash2 size={18} />
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

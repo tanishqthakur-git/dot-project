@@ -6,11 +6,13 @@ import LanguageSelector from "./LanguageSelector";
 import { CODE_SNIPPETS } from "@/constants";
 import { Box, HStack } from "@chakra-ui/react";
 import Output from "./Output";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { db } from "@/config/firebase";
 
-export default function CodeEditor({ onChange, code, language }) {
+export default function CodeEditor({ file }) {
   const [theme, setTheme] = useState("vs-dark");
   const [isLoading, setIsLoading] = useState(false);
-  const [updatedCode, setUpdatedCode] = useState(code);
+  const [updatedCode, setUpdatedCode] = useState("");
   const [syntaxFix, setSyntaxFix] = useState("");
   const [isFixing, setIsFixing] = useState(false)
   const monaco = useMonaco();
@@ -19,6 +21,54 @@ export default function CodeEditor({ onChange, code, language }) {
   const [codeLanguage, setcodeLanguage] = useState('javascript')
   const editorRef = useRef();
 
+  useEffect(() => {
+    if (file) {
+      fetchFileContent();
+    }
+  }, [file]);
+
+  const fetchFileContent = async () => {
+    if (!file?.id || !file?.workspaceId) return;
+    try {
+      const filePath = `workspaces/${file.workspaceId}/files`;
+      const fileRef = doc(db, filePath, file.id);
+      const fileSnap = await getDoc(fileRef);
+
+      console.log("✅ Fetched file content:", fileSnap.data());
+
+      if (fileSnap.exists()) {
+        setUpdatedCode(fileSnap.data().content || "");
+      }
+    } catch (error) {
+      console.error("Error fetching file content:", error);
+    }
+  };
+
+
+  const handleEditorChange = (value) => {
+    setUpdatedCode(value);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => autoSaveFile(value), 2000);
+  };
+
+
+  const autoSaveFile = async (content) => {
+    if (!file?.id || !file?.workspaceId) return;
+
+    console.log("🚀 Auto-saving file...");
+
+    try {
+      const filePath = `workspaces/${file.workspaceId}/files`;
+
+      const fileRef = doc(db, filePath, file.id);
+      await updateDoc(fileRef, { content });
+
+      console.log("✅ Auto-saved file:", file.name);
+    } catch (error) {
+      console.error("Error auto-saving file:", error);
+    }
+  };
+ 
   const onSelect = (codeLanguage) => {
     setcodeLanguage(codeLanguage)
     setUpdatedCode(
@@ -30,6 +80,7 @@ export default function CodeEditor({ onChange, code, language }) {
     editorRef.current = editor;
     editor.focus();
   };
+
 
 
   // useEffect(() => {
@@ -127,6 +178,7 @@ export default function CodeEditor({ onChange, code, language }) {
 
 
 
+
   // Generate documentation and append as comments
   const generateDocs = async () => {
     setIsLoading(true);
@@ -147,10 +199,11 @@ export default function CodeEditor({ onChange, code, language }) {
     }
   };
 
+
   const fixSyntaxErrors = async () => {
     setIsFixing(true);
     try {
-      const res = await axios.post("/api/get-errors", { code: updatedCode, language });
+      const res = await axios.post("/api/get-errors", { code: updatedCode, codeLanguage });
 
       // If errors are found and AI fixes them
       if (res.data.fixedCode) {
@@ -208,9 +261,16 @@ export default function CodeEditor({ onChange, code, language }) {
           onClick={fixSyntaxErrors}
           disabled={isFixing}
         >
-          {isLoading ? "Fixing..." : "Fix Syntax"}
+          {isFixing ? "Fixing..." : "Fix Syntax"}
         </button>
       </div>
+
+       {/* Current File Display */}
+       {file && (
+        <div className="bg-gray-800 text-white px-4 py-2 rounded flex items-center justify-between w-full mb-2">
+          <span className="text-sm">📝 Editing: {file.name}</span>
+        </div>
+      )}
 
 
       {/* Code Editor */}
@@ -222,16 +282,12 @@ export default function CodeEditor({ onChange, code, language }) {
               height="500px"
               theme={theme}
               language={codeLanguage}
-              defaultValue={CODE_SNIPPETS[language]}
+              defaultValue={CODE_SNIPPETS[codeLanguage]}
               value={updatedCode}
               onMount={onMount}
-              onChange={(value) => {
-                setUpdatedCode(value);
-                if (editorRef.current) {
-                  editorRef.current.trigger("keyboard", "cancelSuggestWidget", {});
-                }
-              }}
-              
+
+              onChange={handleEditorChange}
+
               options={{
                 wordWrap: "on",
                 minimap: { enabled: false },
