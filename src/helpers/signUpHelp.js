@@ -48,6 +48,8 @@ export const signInWithGoogle = async () => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
   
+      console.log("Logged in with Google:", user.displayName);
+  
       const userRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(userRef);
   

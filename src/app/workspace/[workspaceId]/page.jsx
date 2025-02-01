@@ -7,6 +7,7 @@ import { db } from "@/config/firebase";
 import Chat from "@/components/Chat";
 import Editor from "@/components/Editor";
 import NavPanel from "@/components/NavPanel";
+import SearchBar from "@/components/Searchbar";
 
 import Header from "@/components/Header";
 import { Menu } from "lucide-react";
@@ -38,7 +39,7 @@ const Workspace = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-950 text-white min-w-[1024px] min-h-[851px]">
       <Header />
-      
+      <SearchBar workspaceId={workspaceId} />
       <div className="flex flex-1 overflow-hidden relative">
         {/* File Panel Toggle */}
         <button
