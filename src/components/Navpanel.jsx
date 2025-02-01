@@ -22,12 +22,14 @@ const NavPanel = ({ workspaceId, openFile }) => {
         return;
       }
 
-      // Fetch role
+     // Fetch role
       const membersSnapshot = await getDocs(collection(db, `workspaces/${workspaceId}/members`));
-      const member = membersSnapshot.docs.find((doc) => doc.id === user.uid);
+      const membersData = membersSnapshot.docs.map((doc) => doc.data()); // Convert docs to data array
+      const member = membersData.find((m) => m.userId === user.uid); // Find the current user's entry
       if (member) {
-        setUserRole(member.data().role);
+        setUserRole(member.role);
       }
+
 
       // Fetch folders
       const foldersSnapshot = await getDocs(collection(db, `workspaces/${workspaceId}/folders`));
@@ -105,11 +107,11 @@ const createFileInFolder = async (folderId) => {
   };
 
   return (
-    <div className="w-1/4 bg-gray-800 text-white p-4 border-r border-gray-700">
+    <div className="bg-gray-800 text-white p-4 border-r border-gray-700">
       <h2 className="text-lg font-bold mb-4">Files & Folders</h2>
 
       {/* Create Folder & File Buttons */}
-      {userRole === "editor" || userRole === "owner" ? (
+      {userRole === "contributor" || userRole === "owner" ? (
         <div className="mb-4 flex gap-2">
           <button onClick={createFolder} className="flex items-center bg-blue-600 px-2 py-1 rounded-md">
             <PlusCircle size={16} className="mr-1" /> Folder
