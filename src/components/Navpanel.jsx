@@ -109,7 +109,8 @@ const createFileInFolder = async (folderId) => {
       <h2 className="text-lg font-bold mb-4">Files & Folders</h2>
 
       {/* Create Folder & File Buttons */}
-      {userRole === "editor" || userRole === "owner" ? (
+      console.log(userRole);
+      {userRole === "contributor" || userRole === "owner" ? (
         <div className="mb-4 flex gap-2">
           <button onClick={createFolder} className="flex items-center bg-blue-600 px-2 py-1 rounded-md">
             <PlusCircle size={16} className="mr-1" /> Folder
