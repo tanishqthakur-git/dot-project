@@ -16,7 +16,7 @@ const Workspace = () => {
   const [workspaceName, setWorkspaceName] = useState("");
   const [membersCount, setMembersCount] = useState(0); // To hold the number of members
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isNavOpen, setIsNavOpen] = useState(false); // To toggle the chat panel
+  const [isNavOpen, setIsNavOpen] = useState(true); // To toggle the chat panel
 
   useEffect(() => {
     const fetchWorkspace = async () => {
