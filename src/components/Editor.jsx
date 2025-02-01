@@ -1,16 +1,98 @@
 "use client";
-import { useState, useEffect } from "react";
-import Editor from "@monaco-editor/react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import Editor, { useMonaco } from "@monaco-editor/react";
 import axios from "axios";
+import LanguageSelector from "./LanguageSelector";
+import { CODE_SNIPPETS } from "@/constants";
+import { Box, HStack } from "@chakra-ui/react";
+import Output from "./Output";
 
 export default function CodeEditor({ onChange, code, language }) {
   const [theme, setTheme] = useState("vs-dark");
   const [isLoading, setIsLoading] = useState(false);
   const [updatedCode, setUpdatedCode] = useState(code);
+  const [syntaxFix, setSyntaxFix] = useState("");
+  const [isFixing, setIsFixing] = useState(false)
+  const monaco = useMonaco();
+  const timeoutRef = useRef(null);
+  const [codeLanguage, setcodeLanguage] = useState('javascript')
+  const editorRef = useRef();
+
+  const onSelect = (codeLanguage) => {
+    setcodeLanguage(codeLanguage)
+    setUpdatedCode(
+      CODE_SNIPPETS[codeLanguage]
+    )
+  }
+
+  const onMount = (editor) => {
+    editorRef.current = editor;
+    editor.focus();
+  };
 
   useEffect(() => {
     setUpdatedCode(code); // Reset when new code is provided
   }, [code]);
+
+  useEffect(() => {
+    if (!monaco) return;
+
+    console.log("✅ Monaco is ready! Registering auto-complete...");
+
+    monaco.languages.registerCompletionItemProvider(language || "javascript", {
+      provideCompletionItems: async (model, position) => {
+        const textUntilPosition = model.getValueInRange({
+          startLineNumber: 1,
+          startColumn: 1,
+          endLineNumber: position.lineNumber,
+          endColumn: position.column,
+        });
+
+        console.log("🚀 Sending request to API with:", textUntilPosition);
+
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+        return new Promise((resolve) => {
+          timeoutRef.current = setTimeout(async () => {
+            try {
+              const res = await axios.post("/api/auto-complete", { code: textUntilPosition });
+
+              console.log("✅ API Response:", res.data);
+
+              const suggestion = res.data.completedCode;
+
+              if (!suggestion) return resolve({ suggestions: [] });
+
+              resolve({
+                suggestions: [
+                  {
+                    label: suggestion,
+                    kind: monaco.languages.CompletionItemKind.Snippet,
+                    insertText: suggestion,
+                    documentation: "AI-generated auto-complete suggestion",
+                    range: new monaco.Range(
+                      position.lineNumber,
+                      position.column,
+                      position.lineNumber,
+                      position.column
+                    ),
+                  },
+                ],
+              });
+            } catch (error) {
+              console.error("❌ Auto-complete error:", error);
+              resolve({ suggestions: [] });
+            }
+          }, 300); // ✅ Debounce AI calls (wait 500ms)
+        });
+      },
+    });
+
+    monaco.editor.onDidCreateModel((model) => {
+      console.log("📄 Editor Model Created:", model);
+    });
+  }, [monaco, language]); // ✅ Runs only when `monaco` or `language` changes
+
 
   // Generate documentation and append as comments
   const generateDocs = async () => {
@@ -30,6 +112,44 @@ export default function CodeEditor({ onChange, code, language }) {
     }
   };
 
+  const fixSyntaxErrors = async () => {
+    setIsFixing(true);
+    try {
+      const res = await axios.post("/api/get-errors", { code: updatedCode, language });
+
+      // If errors are found and AI fixes them
+      if (res.data.fixedCode) {
+        setSyntaxFix(res.data.fixedCode);
+        setUpdatedCode(res.data.fixedCode); // Update the code with the fixed version
+      } else if (res.data.errors) {
+        setSyntaxFix("No syntax errors found.");
+      }
+    } catch (error) {
+      console.error("Failed to fix syntax:", error);
+      setSyntaxFix("Error fixing syntax.");
+    } finally {
+      setIsFixing(false);
+    }
+  };
+
+  // const autoComplete = async () => {
+  //   setIsAutoCompleting(true);
+  //   try {
+  //     const res = await axios.post("/api/auto-complete", { code: updatedCode});
+
+  //     if (res.data.completedCode) {
+  //       setUpdatedCode(res.data.completedCode); // Update the code with the fixed version
+  //     } else if (res.data.errors) {
+  //       setSyntaxFix("Invalid Input.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to auto complete:", error);
+  //   } finally {
+  //     setIsAutoCompleting(false);
+  //   }
+  // };
+
+
   return (
     <>
       {/* Controls Section */}
@@ -47,23 +167,41 @@ export default function CodeEditor({ onChange, code, language }) {
         >
           {isLoading ? "Generating..." : "Generate Docs"}
         </button>
+
+        <button
+          className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded"
+          onClick={fixSyntaxErrors}
+          disabled={isFixing}
+        >
+          {isLoading ? "Fixing..." : "Fix Syntax"}
+        </button>
       </div>
 
+
       {/* Code Editor */}
-      <div className="editor-container">
-        <Editor
-          height="500px"
-          theme={theme}
-          defaultLanguage={language || "javascript"}
-          value={updatedCode}
-          onChange={(value) => setUpdatedCode(value)}
-          options={{
-            wordWrap: "on",
-            minimap: { enabled: false },
-            bracketPairColorization: true,
-          }}
-        />
-      </div>
+      <Box>
+        <HStack spacing={4}>
+          <Box w="50%">
+            <LanguageSelector language={codeLanguage} onSelect={onSelect} />
+            <Editor
+              height="500px"
+              theme={theme}
+              language={codeLanguage}
+              defaultValue={CODE_SNIPPETS[language]}
+              value={updatedCode}
+              onMount={onMount}
+              onChange={(value) => setUpdatedCode(value)}
+              options={{
+                wordWrap: "on",
+                minimap: { enabled: false },
+                bracketPairColorization: true,
+                suggest: { preview: true },
+              }}
+            />
+          </Box>
+          <Output editorRef={editorRef} language={codeLanguage}/>
+        </HStack>
+      </Box>
     </>
   );
 }
