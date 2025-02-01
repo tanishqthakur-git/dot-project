@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { auth, db } from "@/config/firebase";
 import { 
-  collection, addDoc, getDocs, doc, setDoc, deleteDoc, query, where 
+  collection, addDoc, getDocs, doc, setDoc, deleteDoc, query 
 } from "firebase/firestore";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,29 +25,30 @@ const Dashboard = () => {
 
     const fetchWorkspaces = async () => {
       try {
-        const workspaceQuery = query(
-          collection(db, "workspaces"),
-          where("members", "array-contains", user.uid)
-        );
-        const querySnapshot = await getDocs(workspaceQuery);
+        // Step 1: Fetch all workspaces
+        const querySnapshot = await getDocs(collection(db, "workspaces"));
     
+        // Step 2: Process each workspace
         const workspaceData = await Promise.all(
           querySnapshot.docs.map(async (workspaceDoc) => {
             const membersRef = collection(db, `workspaces/${workspaceDoc.id}/members`);
             const membersSnapshot = await getDocs(membersRef);
             
+            // Step 3: Check if the user is a member
             const userMemberData = membersSnapshot.docs.find((doc) => doc.data().userId === user.uid);
-            const role = userMemberData ? userMemberData.data().role : "Unknown";
+            
+            if (!userMemberData) return null; // Skip if the user is not a member
             
             return {
               id: workspaceDoc.id,
               ...workspaceDoc.data(),
-              role,
+              role: userMemberData.data().role || "Unknown",
             };
           })
         );
-    
-        setWorkspaces(workspaceData);
+
+        // Filter out null values
+        setWorkspaces(workspaceData.filter(Boolean));
         setLoading(false);
       } catch (error) {
         console.error("Error fetching workspaces:", error);
@@ -69,17 +70,20 @@ const Dashboard = () => {
       return;
     }
 
+    // Step 1: Create a new workspace (without members array)
     const workspaceRef = await addDoc(collection(db, "workspaces"), {
       name,
       isPublic,
     });
 
+    // Step 2: Add the user to the `members` subcollection
     const membersRef = collection(db, `workspaces/${workspaceRef.id}/members`);
     await setDoc(doc(membersRef, user.uid), {
       userId: user.uid,
       role: "owner",
     });
 
+    // Step 3: Update local state
     setWorkspaces([...workspaces, { id: workspaceRef.id, name, isPublic, role: "owner" }]);
   };
 
