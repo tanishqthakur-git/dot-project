@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { auth, db } from "@/config/firebase"; // Firebase config
 import { useRouter } from "next/navigation";
-import { collection, doc, getDoc, updateDoc, arrayRemove, arrayUnion } from "firebase/firestore";
+import { collection, doc, getDoc, setDoc, updateDoc, arrayRemove, arrayUnion } from "firebase/firestore";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
