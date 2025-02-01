@@ -1,37 +1,50 @@
 "use client";
 import { useState, useEffect } from "react";
 import { firestore } from "@/config/firebase";
-import { collection, query, orderBy, limit, addDoc, serverTimestamp, getDocs, deleteDoc, doc, writeBatch } from "firebase/firestore";
+import {
+  collection,
+  query,
+  orderBy,
+  limit,
+  addDoc,
+  serverTimestamp,
+  getDocs,
+  writeBatch,
+} from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 
-function Chatroom() {
+function Chatroom({ workspaceId }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
-  const [chatVisible, setChatVisible] = useState(true); // Chatbox initially visible
+  const [chatVisible, setChatVisible] = useState(true);
   const userId = "your-logged-in-user-id"; // Always set to the logged-in user's ID
 
   const messagesRef = collection(firestore, "messages");
-  const messagesQuery = query(messagesRef, orderBy("createdAt"), limit(25));
+  const messagesQuery = query(
+    collection(firestore, "messages"),
+    orderBy("createdAt"),
+    limit(25)
+  );
 
-  // Fetch messages manually with their document IDs
+  // Fetch workspace-specific messages
   const fetchMessages = async () => {
     setLoading(true);
     const querySnapshot = await getDocs(messagesQuery);
-    const messagesData = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const messagesData = querySnapshot.docs
+      .map((doc) => ({ id: doc.id, ...doc.data() }))
+      .filter((msg) => msg.workspaceId === workspaceId); // Filter messages by workspace ID
     setMessages(messagesData);
     setLoading(false);
   };
 
-  // Fetch messages when component loads
   useEffect(() => {
-    fetchMessages();
-  }, []);
+    if (workspaceId) {
+      fetchMessages();
+    }
+  }, [workspaceId]);
 
   const sendMessage = async () => {
     if (newMessage.trim() === "") return;
@@ -45,15 +58,22 @@ function Chatroom() {
         createdAt: serverTimestamp(),
         imageUrl: imageUrl,
         userId: userId,
+        workspaceId: workspaceId, // Associate message with workspace
       });
 
-      // Add the new message optimistically to the state
       setMessages((prevMessages) => [
         ...prevMessages,
-        { id: docRef.id, text: newMessage, imageUrl, userId, createdAt: { seconds: Date.now() / 1000 } },
+        {
+          id: docRef.id,
+          text: newMessage,
+          imageUrl,
+          userId,
+          workspaceId,
+          createdAt: { seconds: Date.now() / 1000 },
+        },
       ]);
 
-      setNewMessage(""); // Reset the input field
+      setNewMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
       alert(`An error occurred while sending the message: ${error.message}`);
@@ -61,31 +81,27 @@ function Chatroom() {
   };
 
   const handleKeyDown = (e) => {
-    // Check if the Enter key was pressed
     if (e.key === "Enter") {
-      sendMessage(); // Send the message if Enter is pressed
+      sendMessage();
     }
   };
 
   const clearMessages = async () => {
-    // Ask for confirmation before clearing all messages
     const confirmClear = window.confirm("Are you sure you want to clear all messages?");
-  
-    if (!confirmClear) return; // If the user cancels, don't proceed with clearing messages
-    
+    if (!confirmClear) return;
+
     try {
       console.log("Clearing all messages...");
       const querySnapshot = await getDocs(messagesQuery);
-      const batch = writeBatch(firestore); // Correctly initialized the batch
+      const batch = writeBatch(firestore);
       querySnapshot.forEach((doc) => {
-        batch.delete(doc.ref);
+        if (doc.data().workspaceId === workspaceId) {
+          batch.delete(doc.ref);
+        }
       });
       await batch.commit();
 
-      // Clear messages from the state
       setMessages([]);
-
-      // Show success alert
       alert("All messages have been cleared!");
     } catch (error) {
       console.error("Error clearing messages:", error);
@@ -133,7 +149,7 @@ function Chatroom() {
               <Input
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={handleKeyDown} // Add the keydown event listener
+                onKeyDown={handleKeyDown}
                 placeholder="Type a message..."
               />
               <Button onClick={sendMessage}>Send</Button>
