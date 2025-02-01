@@ -29,7 +29,7 @@ function Chatroom({ workspaceId }) {
 
     setLoading(true);
 
-    // *Real-time listener for messages*
+    // **Real-time listener for messages**
     const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
       const messagesData = snapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }))
