@@ -13,8 +13,8 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
 
-  const router =  useRouter();
-  
+  const router = useRouter();
+
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
@@ -23,6 +23,7 @@ const Login = () => {
       if (user) router.push("/dashboard");
     } catch (error) {
       setError(error.message);
+      alert("Login failed: " + error.message); // Alert when login fails
     }
   };
 
@@ -33,6 +34,7 @@ const Login = () => {
       if (user) router.push("/dashboard");
     } catch (error) {
       setError(error.message);
+      alert("Login failed: " + error.message); // Alert when Google login fails
     }
   };
 
