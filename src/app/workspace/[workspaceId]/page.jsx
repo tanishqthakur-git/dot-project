@@ -4,13 +4,17 @@ import Chat from "@/components/Chat";
 import { useParams } from "next/navigation";
 import Editor from "@/components/Editor";
 import  NavPanel  from "@/components/Navpanel";
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import Header from "@/components/Header";
 
 const Workspace = () => {
  
   const { workspaceId } = useParams(); // Get workspaceId from URL
   const [selectedFile, setSelectedFile] = useState(null);
+
+ 
+      console.log("Selected file:", selectedFile);
+  
 
   return (
     <div >
