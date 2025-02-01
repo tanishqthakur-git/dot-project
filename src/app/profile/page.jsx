@@ -66,9 +66,10 @@ const Profile = () => {
 
     try {
       // Step 1: Add user to the workspace as a contributor
-      const workspaceRef = doc(db, "workspaces", workspaceId);
-      await updateDoc(workspaceRef, {
-        members: arrayUnion({ userId: user.uid, role: "contributor" }),
+      const membersRef = collection(db, `workspaces/${workspaceId}/members`);
+      await setDoc(doc(membersRef, user.uid), {
+        userId: user.uid,
+        role: "contributor",
       });
 
       // Step 2: Remove the invite from the user's document
