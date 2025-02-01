@@ -39,12 +39,7 @@ const Workspace = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-950 text-white min-w-[1024px] min-h-[851px]">
       <Header />
-
-      {/* Improved SearchBar Position */}
-      <div className="relative p-4">
-        <SearchBar workspaceId={workspaceId} />
-      </div>
-
+      <SearchBar workspaceId={workspaceId} />
       <div className="flex flex-1 overflow-hidden relative">
         {/* File Panel Toggle */}
         <button
@@ -62,21 +57,17 @@ const Workspace = () => {
         >
           {isNavOpen && (
             <section className="p-4 pt-14">
+              
               <NavPanel workspaceId={workspaceId} openFile={setSelectedFile} />
             </section>
           )}
         </nav>
 
         {/* Main - Editor Content */}
-        <main
-          className={`transition-all duration-300 ${
-            isNavOpen && isChatOpen
-              ? "w-3/5"
-              : isNavOpen || isChatOpen
-              ? "w-4/5"
-              : "w-full"
-          } flex flex-col p-6 overflow-auto`}
-        >
+        <main className={`transition-all duration-300 ${
+          isNavOpen && isChatOpen ? "w-3/5" : 
+          isNavOpen || isChatOpen ? "w-4/5" : "w-full"
+        } flex flex-col p-6 overflow-auto`}>
           <h1 className="text-2xl font-bold mb-4">Workspace: {workspaceId}</h1>
           <Editor />
         </main>

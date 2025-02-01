@@ -7,6 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+// Custom Dark Theme for Toast
+const toastOptions = {
+  position: "top-right",
+  autoClose: 3000,
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: true,
+  draggable: true,
+  theme: "dark",
+};
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -20,10 +33,14 @@ const Login = () => {
     try {
       const user = await loginWithEmailAndPassword(email, password);
       console.log("Logged in as:", user.email);
-      if (user) router.push("/dashboard");
+
+      if (user) {
+        toast.success("Login successful!", toastOptions);
+        router.push("/dashboard");
+      }
     } catch (error) {
       setError(error.message);
-      alert("Login failed: " + error.message); // Alert when login fails
+      toast.error("Login failed: " + error.message, toastOptions);
     }
   };
 
@@ -31,15 +48,22 @@ const Login = () => {
     try {
       const user = await loginWithGoogle();
       console.log("Logged in with Google:", user.displayName);
-      if (user) router.push("/dashboard");
+
+      if (user) {
+        toast.success("Logged in with Google!", toastOptions);
+        router.push("/dashboard");
+      }
     } catch (error) {
       setError(error.message);
-      alert("Login failed: " + error.message); // Alert when Google login fails
+      toast.error("Google login failed: " + error.message, toastOptions);
     }
   };
 
   return (
     <div className="flex justify-center items-center h-screen bg-[#0f172a] text-white">
+      {/* Dark-themed Toast Container */}
+      <ToastContainer theme="dark" />
+      
       <Card className="w-96 bg-[#1e293b] border border-gray-500 shadow-2xl rounded-lg">
         <CardHeader>
           <CardTitle className="text-center text-xl font-bold text-white">Login</CardTitle>

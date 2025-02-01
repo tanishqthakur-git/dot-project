@@ -2,18 +2,46 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { auth, db } from "@/config/firebase";
-import { 
-  collection, addDoc, getDocs, doc, setDoc, deleteDoc, query 
+import {
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  setDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Link from "next/link";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+
+const toastOptions = {
+  position: "top-right",
+  autoClose: 3000,
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: true,
+  draggable: true,
+  theme: "dark",
+};
 
 const Dashboard = () => {
   const [workspaces, setWorkspaces] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+  const [workspaceName, setWorkspaceName] = useState("");
+  const [isPublic, setIsPublic] = useState(false);
   const router = useRouter();
   const user = auth.currentUser;
 
@@ -25,20 +53,22 @@ const Dashboard = () => {
 
     const fetchWorkspaces = async () => {
       try {
-        // Step 1: Fetch all workspaces
         const querySnapshot = await getDocs(collection(db, "workspaces"));
-    
-        // Step 2: Process each workspace
+
         const workspaceData = await Promise.all(
           querySnapshot.docs.map(async (workspaceDoc) => {
-            const membersRef = collection(db, `workspaces/${workspaceDoc.id}/members`);
+            const membersRef = collection(
+              db,
+              `workspaces/${workspaceDoc.id}/members`
+            );
             const membersSnapshot = await getDocs(membersRef);
-            
-            // Step 3: Check if the user is a member
-            const userMemberData = membersSnapshot.docs.find((doc) => doc.data().userId === user.uid);
-            
-            if (!userMemberData) return null; // Skip if the user is not a member
-            
+
+            const userMemberData = membersSnapshot.docs.find(
+              (doc) => doc.data().userId === user.uid
+            );
+
+            if (!userMemberData) return null;
+
             return {
               id: workspaceDoc.id,
               ...workspaceDoc.data(),
@@ -47,7 +77,6 @@ const Dashboard = () => {
           })
         );
 
-        // Filter out null values
         setWorkspaces(workspaceData.filter(Boolean));
         setLoading(false);
       } catch (error) {
@@ -55,57 +84,94 @@ const Dashboard = () => {
         setLoading(false);
       }
     };
-    
+
     fetchWorkspaces();
   }, [user]);
 
   const createWorkspace = async () => {
-    const name = prompt("Enter workspace name:");
-    if (!name) return;
+    // Use ShadCN dark modal for input
+    setIsOpen(true);
+  };
 
-    const isPublic = window.confirm("Should this workspace be public?");
-    
-    if (!user) {
-      alert("You must be logged in to create a workspace.");
-      return;
+  const handleCreateWorkspace = async () => {
+    if (!workspaceName) return;
+
+    try {
+      const workspaceRef = await addDoc(collection(db, "workspaces"), {
+        name: workspaceName,
+        isPublic,
+      });
+
+      const membersRef = collection(
+        db,
+        `workspaces/${workspaceRef.id}/members`
+      );
+      await setDoc(doc(membersRef, user.uid), {
+        userId: user.uid,
+        role: "owner",
+      });
+
+      setWorkspaces([
+        ...workspaces,
+        { id: workspaceRef.id, name: workspaceName, isPublic, role: "owner" },
+      ]);
+      toast.success("Workspace created successfully!", toastOptions);
+      setIsOpen(false);
+    } catch (error) {
+      toast.error("Failed to create workspace.", toastOptions);
     }
-
-    // Step 1: Create a new workspace (without members array)
-    const workspaceRef = await addDoc(collection(db, "workspaces"), {
-      name,
-      isPublic,
-    });
-
-    // Step 2: Add the user to the `members` subcollection
-    const membersRef = collection(db, `workspaces/${workspaceRef.id}/members`);
-    await setDoc(doc(membersRef, user.uid), {
-      userId: user.uid,
-      role: "owner",
-    });
-
-    // Step 3: Update local state
-    setWorkspaces([...workspaces, { id: workspaceRef.id, name, isPublic, role: "owner" }]);
   };
 
   const deleteWorkspace = async (workspaceId) => {
-    if (!window.confirm("Are you sure you want to delete this workspace?")) return;
-
-    try {
-      await deleteDoc(doc(db, `workspaces/${workspaceId}`));
-      setWorkspaces(workspaces.filter((ws) => ws.id !== workspaceId));
-    } catch (error) {
-      console.error("Error deleting workspace:", error);
-    }
+    const confirmationToast = toast(
+      <div className="flex justify-between items-center">
+        <span>Are you sure you want to delete this workspace?</span>
+        <div className="flex space-x-2">
+          <Button
+            onClick={async () => {
+              try {
+                await deleteDoc(doc(db, `workspaces/${workspaceId}`));
+                setWorkspaces(workspaces.filter((ws) => ws.id !== workspaceId));
+                toast.success("Workspace deleted successfully!", toastOptions);
+              } catch (error) {
+                toast.error("Failed to delete workspace.", toastOptions);
+              }
+              toast.dismiss(confirmationToast); // Dismiss the confirmation toast after action
+            }}
+            className="bg-red-600 hover:bg-red-500"
+          >
+            Delete
+          </Button>
+          <Button
+            onClick={() => toast.dismiss(confirmationToast)} // Dismiss the toast without action
+            className="bg-gray-500 hover:bg-gray-600"
+          >
+            Cancel
+          </Button>
+        </div>
+      </div>,
+      {
+        ...toastOptions,
+        autoClose: false, // Keep the toast open until user responds
+        closeOnClick: false,
+        draggable: false,
+        hideProgressBar: true,
+      }
+    );
   };
 
   return (
     <div className="h-screen w-screen bg-[#0F172A] text-white flex flex-col">
+      <ToastContainer />
       <Header />
-      
+
       <div className="flex justify-between items-center p-6">
         <h1 className="text-2xl font-bold text-blue-300">Your Workspaces</h1>
-        
-        <Button onClick={createWorkspace} className="bg-blue-600 hover:bg-blue-500">
+
+        <Button
+          onClick={createWorkspace}
+          className="bg-blue-600 hover:bg-blue-500"
+        >
           <PlusCircle size={18} className="mr-2" /> Create Workspace
         </Button>
       </div>
@@ -116,13 +182,20 @@ const Dashboard = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {workspaces.length === 0 ? (
-              <p className="text-gray-400 col-span-3 text-center">No workspaces found. Create one!</p>
+              <p className="text-gray-400 col-span-3 text-center">
+                No workspaces found. Create one!
+              </p>
             ) : (
               workspaces.map((ws) => (
-                <Card key={ws.id} className="relative group bg-[#1E293B] border border-blue-500">
+                <Card
+                  key={ws.id}
+                  className="relative group bg-[#1E293B] border border-blue-500"
+                >
                   <CardContent className="p-4">
                     <Link href={`/workspace/${ws.id}`} className="block">
-                      <h2 className="text-lg font-semibold text-blue-300">{ws.name}</h2>
+                      <h2 className="text-lg font-semibold text-blue-300">
+                        {ws.name}
+                      </h2>
                       <p className="text-sm text-gray-400">
                         {ws.isPublic ? "Public Workspace" : "Private Workspace"}
                       </p>
@@ -132,7 +205,7 @@ const Dashboard = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute top-2 right-2 text-red-500 hover:text-red-700 hidden group-hover:block"
+                      className="absolute top-2 right-2 flex items-center justify-center text-red-500 hover:text-red-700 hidden group-hover:block w-6 h-6"
                       onClick={(e) => {
                         e.preventDefault();
                         deleteWorkspace(ws.id);
@@ -147,6 +220,59 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+
+      {/* ShadCN Modal for workspace name input and public status */}
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline">Open Dialog</Button>
+        </DialogTrigger>
+        <DialogContent className="bg-[#1E293B] text-white">
+          <DialogTitle>Create Workspace</DialogTitle>
+          <DialogDescription>
+            <p>
+              Enter the name of the workspace and select if it should be public.
+            </p>
+            <Input
+              placeholder="Workspace Name"
+              value={workspaceName}
+              onChange={(e) => setWorkspaceName(e.target.value)}
+              className="mb-4"
+            />
+            <div className="flex space-x-4 mb-4">
+              <Button
+                className={`${isPublic ? "bg-blue-600" : "bg-gray-500"} hover:${
+                  isPublic ? "bg-blue-500" : "bg-gray-600"
+                }`}
+                onClick={() => setIsPublic(true)}
+              >
+                Public
+              </Button>
+              <Button
+                className={`${
+                  !isPublic ? "bg-blue-600" : "bg-gray-500"
+                } hover:${!isPublic ? "bg-blue-500" : "bg-gray-600"}`}
+                onClick={() => setIsPublic(false)}
+              >
+                Private
+              </Button>
+            </div>
+            <div className="flex space-x-4">
+              <Button
+                onClick={handleCreateWorkspace}
+                className="bg-blue-600 hover:bg-blue-500"
+              >
+                Create
+              </Button>
+              <Button
+                onClick={() => setIsOpen(false)}
+                className="bg-gray-500 hover:bg-gray-600"
+              >
+                Cancel
+              </Button>
+            </div>
+          </DialogDescription>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
