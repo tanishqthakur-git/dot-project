@@ -17,8 +17,8 @@ export default function HomePage() {
           Write, collaborate, and debug with AI-assisted coding in real-time.
         </p>
         <div className="flex justify-center gap-4">
-          <Button className="bg-blue-500 hover:bg-blue-600">Start Coding</Button>
-          <Button onClick={() => window.location.href = "/register"} className="bg-white text-gray-800 hover:bg-gray-100">
+          
+          <Button className="bg-blue-500 hover:bg-blue-600" onClick={() => window.location.href = "/register"} >
             Sign Up / Log In
           </Button>
 

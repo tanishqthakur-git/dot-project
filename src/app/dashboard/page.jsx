@@ -224,7 +224,7 @@ const Dashboard = () => {
       {/* ShadCN Modal for workspace name input and public status */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline">Open Dialog</Button>
+          
         </DialogTrigger>
         <DialogContent className="bg-[#1E293B] text-white">
           <DialogTitle>Create Workspace</DialogTitle>
