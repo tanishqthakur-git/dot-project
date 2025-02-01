@@ -58,34 +58,43 @@ const NavPanel = ({ workspaceId, openFile }) => {
   };
 
   // Create a folder
-  const createFolder = async () => {
-    const name = prompt("Enter folder name:");
-    if (!name) return;
-    const docRef = await addDoc(collection(db, `workspaces/${workspaceId}/folders`), { name });
-    setFolders([...folders, { id: docRef.id, name }]);
-    setFolderStates((prevState) => ({ ...prevState, [docRef.id]: false }));
-  };
+const createFolder = async () => {
+  const name = prompt("Enter folder name:");
+  if (!name) return;
+  const docRef = await addDoc(collection(db, `workspaces/${workspaceId}/folders`), { name });
+  setFolders([...folders, { id: docRef.id, name }]);
+  setFolderStates((prevState) => ({ ...prevState, [docRef.id]: false }));
+};
 
-  // Create a file (outside folders)
-  const createFile = async () => {
-    const name = prompt("Enter file name:");
-    if (!name) return;
-    const docRef = await addDoc(collection(db, `workspaces/${workspaceId}/files`), { name, folderId: null });
-    setFiles([...files, { id: docRef.id, name, folderId: null }]);
-  };
+// Create a file (outside folders)
+const createFile = async () => {
+  const name = prompt("Enter file name:");
+  if (!name) return;
+  const docRef = await addDoc(collection(db, `workspaces/${workspaceId}/files`), { 
+    name, 
+    folderId: null,
+    workspaceId 
+  });
+  setFiles([...files, { id: docRef.id, name, folderId: null, workspaceId }]);
+};
 
-  // Create a file inside a folder
-  const createFileInFolder = async (folderId) => {
-    const name = prompt("Enter file name:");
-    if (!name) return;
-    const docRef = await addDoc(collection(db, `workspaces/${workspaceId}/files`), { name, folderId });
-    setFiles([...files, { id: docRef.id, name, folderId }]);
-  };
+// Create a file inside a folder
+const createFileInFolder = async (folderId) => {
+  const name = prompt("Enter file name:");
+  if (!name) return;
+  const docRef = await addDoc(collection(db, `workspaces/${workspaceId}/files`), { 
+    name, 
+    folderId, 
+    workspaceId 
+  });
+  setFiles([...files, { id: docRef.id, name, folderId, workspaceId }]);
+  if(!folderStates[folderId]) toggleFolder(folderId);
+};
+
 
   // Delete a folder or file
   const deleteItem = async (type, id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this?");
-    if (!confirmDelete) return;
+    
     await deleteDoc(doc(db, `workspaces/${workspaceId}/${type}/${id}`));
 
     if (type === "folders") {
@@ -163,8 +172,8 @@ const NavPanel = ({ workspaceId, openFile }) => {
         {files
           .filter((file) => !file.folderId)
           .map((file) => (
-            <li key={file.id} className="mb-2 flex justify-between items-center cursor-pointer" onClick={() => openFile(file)}>
-              <span className="flex items-center">
+            <li key={file.id} className="mb-2 flex justify-between items-center cursor-pointer" >
+              <span className="flex items-center" onClick={() => openFile(file)}>
                 <File size={16} className="mr-2" /> {file.name}
               </span>
               {userRole === "editor" || userRole === "owner" ? (
