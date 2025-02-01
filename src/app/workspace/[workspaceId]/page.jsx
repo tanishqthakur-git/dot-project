@@ -1,7 +1,10 @@
 "use client";
 
-import Chat from "@/components/Chat";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/config/firebase";
+import Chat from "@/components/Chat";
 import Editor from "@/components/Editor";
 import NavPanel from "@/components/NavPanel";
 import { useState } from "react";
@@ -9,10 +12,27 @@ import Header from "@/components/Header";
 import { Menu } from "lucide-react";
 
 const Workspace = () => {
-  const { workspaceId } = useParams();
+  const { workspaceId } = useParams(); // Get workspaceId from URL
   const [selectedFile, setSelectedFile] = useState(null);
-  const [isNavOpen, setIsNavOpen] = useState(true);
-  const [isChatOpen, setIsChatOpen] = useState(true);
+  const [workspaceName, setWorkspaceName] = useState("");
+  const [isChatOpen, setIsChatOpen] = useState(false); // To toggle the chat panel
+
+  useEffect(() => {
+    const fetchWorkspace = async () => {
+      if (!workspaceId) return;
+
+      const workspaceRef = doc(db, "workspaces", workspaceId);
+      const workspaceSnap = await getDoc(workspaceRef);
+
+      if (workspaceSnap.exists()) {
+        setWorkspaceName(workspaceSnap.data().name); // Get the name field from Firestore
+      } else {
+        console.error("Workspace not found");
+      }
+    };
+
+    fetchWorkspace();
+  }, [workspaceId]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-950 text-white min-w-[1024px] min-h-[851px]">
