@@ -6,17 +6,68 @@ import LanguageSelector from "./LanguageSelector";
 import { CODE_SNIPPETS } from "@/constants";
 import { Box, HStack } from "@chakra-ui/react";
 import Output from "./Output";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { db } from "@/config/firebase";
 
-export default function CodeEditor({ onChange, code, language }) {
+export default function CodeEditor({ file }) {
   const [theme, setTheme] = useState("vs-dark");
   const [isLoading, setIsLoading] = useState(false);
-  const [updatedCode, setUpdatedCode] = useState(code);
+  const [updatedCode, setUpdatedCode] = useState("");
   const [syntaxFix, setSyntaxFix] = useState("");
   const [isFixing, setIsFixing] = useState(false)
   const monaco = useMonaco();
   const timeoutRef = useRef(null);
   const [codeLanguage, setcodeLanguage] = useState('javascript')
   const editorRef = useRef();
+
+  useEffect(() => {
+    if (file) {
+      fetchFileContent();
+    }
+  }, [file]);
+
+  const fetchFileContent = async () => {
+    if (!file?.id || !file?.workspaceId) return;
+
+    try {
+      const filePath = file.folderId
+        ? `workspaces/${file.workspaceId}/folders/${file.folderId}/files`
+        : `workspaces/${file.workspaceId}/files`;
+
+      const fileRef = doc(db, filePath, file.id);
+      const fileSnap = await getDoc(fileRef);
+
+      if (fileSnap.exists()) {
+        setUpdatedCode(fileSnap.data().content || "");
+      }
+    } catch (error) {
+      console.error("Error fetching file content:", error);
+    }
+  };
+
+  const handleEditorChange = (value) => {
+    setUpdatedCode(value);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => autoSaveFile(value), 5000);
+  };
+
+  const autoSaveFile = async (content) => {
+    if (!file?.id || !file?.workspaceId) return;
+
+    try {
+      const filePath = file.folderId
+        ? `workspaces/${file.workspaceId}/folders/${file.folderId}/files`
+        : `workspaces/${file.workspaceId}/files`;
+
+      const fileRef = doc(db, filePath, file.id);
+      await updateDoc(fileRef, { content });
+
+      console.log("✅ Auto-saved file:", file.name);
+    } catch (error) {
+      console.error("Error auto-saving file:", error);
+    }
+  };
+ 
 
   const onSelect = (codeLanguage) => {
     setcodeLanguage(codeLanguage)
@@ -30,16 +81,13 @@ export default function CodeEditor({ onChange, code, language }) {
     editor.focus();
   };
 
-  useEffect(() => {
-    setUpdatedCode(code); // Reset when new code is provided
-  }, [code]);
 
   useEffect(() => {
     if (!monaco) return;
 
     console.log("✅ Monaco is ready! Registering auto-complete...");
 
-    monaco.languages.registerCompletionItemProvider(language || "javascript", {
+    monaco.languages.registerCompletionItemProvider(codeLanguage || "javascript", {
       provideCompletionItems: async (model, position) => {
         const textUntilPosition = model.getValueInRange({
           startLineNumber: 1,
@@ -91,7 +139,7 @@ export default function CodeEditor({ onChange, code, language }) {
     monaco.editor.onDidCreateModel((model) => {
       console.log("📄 Editor Model Created:", model);
     });
-  }, [monaco, language]); // ✅ Runs only when `monaco` or `language` changes
+  }, [monaco, codeLanguage]); // ✅ Runs only when `monaco` or `language` changes
 
 
   // Generate documentation and append as comments
@@ -112,10 +160,11 @@ export default function CodeEditor({ onChange, code, language }) {
     }
   };
 
+
   const fixSyntaxErrors = async () => {
     setIsFixing(true);
     try {
-      const res = await axios.post("/api/get-errors", { code: updatedCode, language });
+      const res = await axios.post("/api/get-errors", { code: updatedCode, codeLanguage });
 
       // If errors are found and AI fixes them
       if (res.data.fixedCode) {
@@ -173,7 +222,7 @@ export default function CodeEditor({ onChange, code, language }) {
           onClick={fixSyntaxErrors}
           disabled={isFixing}
         >
-          {isLoading ? "Fixing..." : "Fix Syntax"}
+          {isFixing ? "Fixing..." : "Fix Syntax"}
         </button>
       </div>
 
@@ -187,7 +236,7 @@ export default function CodeEditor({ onChange, code, language }) {
               height="500px"
               theme={theme}
               language={codeLanguage}
-              defaultValue={CODE_SNIPPETS[language]}
+              defaultValue={CODE_SNIPPETS[codeLanguage]}
               value={updatedCode}
               onMount={onMount}
               onChange={(value) => setUpdatedCode(value)}
