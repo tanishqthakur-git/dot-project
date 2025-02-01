@@ -105,7 +105,7 @@ const createFileInFolder = async (folderId) => {
   };
 
   return (
-    <div className="w-1/4 bg-gray-800 text-white p-4 border-r border-gray-700">
+    <div className="bg-gray-800 text-white p-4 border-r border-gray-700">
       <h2 className="text-lg font-bold mb-4">Files & Folders</h2>
 
       {/* Create Folder & File Buttons */}
