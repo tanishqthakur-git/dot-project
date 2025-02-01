@@ -27,15 +27,15 @@ const Dashboard = () => {
       try {
         const workspaceQuery = query(
           collection(db, "workspaces"),
-          where("owner", "==", user.uid)
+          where("members", "array-contains", user.uid) // Fetch workspaces where the user is a member (owner or contributor)
         );
         const querySnapshot = await getDocs(workspaceQuery);
-
+    
         const workspaceData = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-
+    
         setWorkspaces(workspaceData);
         setLoading(false);
       } catch (error) {
@@ -43,7 +43,7 @@ const Dashboard = () => {
         setLoading(false);
       }
     };
-
+    
     fetchWorkspaces();
   }, [user]);
 
@@ -62,15 +62,10 @@ const Dashboard = () => {
       name,
       isPublic,
       owner: user.uid,
+      members: [user.uid], // Ensure the owner is also added as a member
     });
 
-    if (isPublic) {
-      await setDoc(doc(db, `workspaces/${docRef.id}/members/${user.uid}`), {
-        role: "owner",
-      });
-    }
-
-    setWorkspaces([...workspaces, { id: docRef.id, name, isPublic, owner: user.uid }]);
+    setWorkspaces([...workspaces, { id: docRef.id, name, isPublic, owner: user.uid, members: [user.uid] }]);
   };
 
   const deleteWorkspace = async (workspaceId) => {
