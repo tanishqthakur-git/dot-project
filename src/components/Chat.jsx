@@ -143,11 +143,15 @@ function Chatroom({ workspaceId, setIsChatOpen }) {
 
     return (
       <div
-        className={`flex flex-col gap-1 ${
-          isCurrentUser ? "items-end" : 
-          isAI ? "items-center" : "items-start"
-        }`}
-      >
+  className={`flex flex-col gap-1 ${
+    isCurrentUser
+      ? "items-end"
+      : isAI
+      ? "items-center w-full" // Ensure AI messages take full width
+      : "items-start"
+  }`}
+>
+
         {!isAI && (
           <span className="text-xs text-gray-400">
             {isCurrentUser ? "You" : msg.name}
@@ -164,7 +168,7 @@ function Chatroom({ workspaceId, setIsChatOpen }) {
           )}
 
           <div
-            className={`py-2 px-4 text-sm rounded-2xl max-w-[80%] break-words ${
+            className={`py-2 px-4 text-sm rounded-2xl mx-auto max-w-[80%] break-words ${
               isAI ? "bg-blue-900/40 border border-blue-800/50" :
               isCurrentUser 
                 ? "bg-purple-600/40" 
@@ -229,7 +233,7 @@ function Chatroom({ workspaceId, setIsChatOpen }) {
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500 text-sm">
+          <div className="flex flex-col items-center justify-center h-full text-gray-500 text-sm ">
             <p>No messages yet</p>
             <p className="text-xs mt-1 text-gray-600">
               Type @ followed by your question to ask AI
