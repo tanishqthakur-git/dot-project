@@ -130,7 +130,7 @@ const Dashboard = () => {
 
   const deleteWorkspace = async (workspaceId) => {
     const confirmationToast = toast(
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-4">
         <span>Are you sure you want to delete this workspace?</span>
         <div className="flex space-x-2">
           <Button

@@ -150,7 +150,7 @@ function Chatroom({ workspaceId, setIsChatOpen }) {
                     className={`py-1 px-3 text-sm rounded-lg max-w-[75%] break-words ${
                       isCurrentUser
                         ? "bg-purple-700 bg-opacity-40 text-white self-end"
-                        : "bg-gray-800 bg-opacity-40 text-gray-200 self-start"
+                        : "bg-gray-500 bg-opacity-40 text-gray-200 self-start"
                     }`}
                   >
                     {msg.text}
