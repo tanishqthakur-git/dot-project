@@ -4,6 +4,7 @@ import { collection, query, where, getDocs, doc, updateDoc, arrayUnion } from "f
 import { getAuth } from "firebase/auth"; // Import Firebase Auth
 import { db } from "@/config/firebase";
 import { UserPlus, X } from "lucide-react"; // Import icons
+import toast, { Toaster } from "react-hot-toast"; // Import react-hot-toast
 
 export default function SearchBar({ workspaceId }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -55,13 +56,59 @@ export default function SearchBar({ workspaceId }) {
       setUsers(matchedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
+      toast.error("Failed to fetch users", {
+        style: {
+          background: '#1f2937',
+          color: 'white',
+        },
+        iconTheme: {
+          primary: '#ef4444',
+          secondary: 'white',
+        },
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const inviteUser = async (userId, userEmail) => {
-    const confirmInvite = window.confirm(`Invite ${userEmail} to join the workspace?`);
+    // Custom confirmation dialog using react-hot-toast
+    const confirmInvite = await new Promise((resolve) => {
+      toast.custom(
+        (t) => (
+          <div className="dark:bg-gray-800 bg-white p-4 rounded-lg shadow-lg flex flex-col gap-2">
+            <p className="dark:text-white text-gray-900">
+              Invite {userEmail} to join the workspace?
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  resolve(false);
+                }}
+              >
+                No
+              </button>
+              <button
+                className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  resolve(true);
+                }}
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        ),
+        {
+          duration: Infinity, // Keep the toast open until user interacts
+          position: "right-center",
+        }
+      );
+    });
+
     if (!confirmInvite) return;
 
     try {
@@ -69,9 +116,29 @@ export default function SearchBar({ workspaceId }) {
       await updateDoc(userRef, {
         invites: arrayUnion(workspaceId),
       });
-      alert(`${userEmail} has been invited.`);
+      
+      toast.success(`${userEmail} has been invited.`, {
+        style: {
+          background: '#1f2937',
+          color: 'white',
+        },
+        iconTheme: {
+          primary: '#3b82f6',
+          secondary: 'white',
+        },
+      });
     } catch (error) {
       console.error("Error sending invitation:", error);
+      toast.error("Failed to send invitation", {
+        style: {
+          background: '#1f2937',
+          color: 'white',
+        },
+        iconTheme: {
+          primary: '#ef4444',
+          secondary: 'white',
+        },
+      });
     }
   };
 
@@ -121,6 +188,14 @@ export default function SearchBar({ workspaceId }) {
           </div>
         </div>
       )}
+
+      {/* Toast Container */}
+      <Toaster
+        position="right-center"
+        toastOptions={{
+          className: 'dark:bg-gray-800 dark:text-white',
+        }}
+      />
     </div>
   );
 }
