@@ -8,13 +8,11 @@ import { rtdb } from "@/config/firebase"; // Import Realtime Database
 const LiveCursor = ({ workspaceId }) => {
   const { user } = useAuth();
   const [cursors, setCursors] = useState({});
-
+  
   useEffect(() => {
     if (!user || !workspaceId) return;
 
     const cursorRef = ref(rtdb, `workspaces/${workspaceId}/cursors/${user.uid}`);
-
-    console.log("Cursor ref:", cursorRef);
 
     const handleMouseMove = (event) => {
       const { clientX, clientY } = event;
