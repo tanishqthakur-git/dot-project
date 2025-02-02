@@ -67,7 +67,7 @@ export default function CodeEditor({ file }) {
     setUpdatedCode(value);
 
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => autoSaveFile(value), 0);
+    timeoutRef.current = setTimeout(() => autoSaveFile(value), 1000);
   };
 
   // Auto-save file content

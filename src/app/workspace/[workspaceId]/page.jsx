@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "@/config/firebase";
@@ -10,14 +10,16 @@ import { MessageCircle, Menu } from "lucide-react"; // Chat & Menu icons
 import Header from "@/components/Header";
 import ShowMembers from "@/components/Members";
 import NavPanel from "@/components/NavPanel";
+import LiveCursor from "@/components/LiveCursor";
 
 const Workspace = () => {
   const { workspaceId } = useParams(); // Get workspaceId from URL
-  const [selectedFile, setSelectedFile] = useState({ name: "sample", content: "" });
+  const [selectedFile, setSelectedFile] = useState(null);
   const [workspaceName, setWorkspaceName] = useState("");
   const [membersCount, setMembersCount] = useState(0);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isNavOpen, setIsNavOpen] = useState(true);
+
 
   useEffect(() => {
     const fetchWorkspace = async () => {
@@ -41,8 +43,13 @@ const Workspace = () => {
     fetchWorkspace();
   }, [workspaceId]);
 
+  useEffect(() => {
+    console.log("🔄 Parent re-rendered!");
+  });
+
   return (
     <div className="flex flex-col h-screen bg-gray-950 text-white min-w-[1024px] relative">
+      
       {/* Header */}
       <Header workspaceId={workspaceId} />
 
@@ -106,6 +113,7 @@ const Workspace = () => {
           </button>
         )
       }
+      <LiveCursor workspaceId={workspaceId} />
     </div>
   );
 };
