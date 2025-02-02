@@ -170,7 +170,7 @@ const Dashboard = () => {
 
         <Button
           onClick={createWorkspace}
-          className="bg-blue-600 hover:bg-blue-500"
+          className="bg-blue-600 hover:bg-blue-500 text-white"
         >
           <PlusCircle size={18} className="mr-2" /> Create Workspace
         </Button>
@@ -236,13 +236,13 @@ const Dashboard = () => {
               placeholder="Workspace Name"
               value={workspaceName}
               onChange={(e) => setWorkspaceName(e.target.value)}
-              className="mb-4"
+              className="mb-4 text-white placeholder-white"
             />
             <div className="flex space-x-4 mb-4">
               <Button
                 className={`${isPublic ? "bg-blue-600" : "bg-gray-500"} hover:${
                   isPublic ? "bg-blue-500" : "bg-gray-600"
-                }`}
+                } text-white`}
                 onClick={() => setIsPublic(true)}
               >
                 Public
@@ -250,7 +250,7 @@ const Dashboard = () => {
               <Button
                 className={`${
                   !isPublic ? "bg-blue-600" : "bg-gray-500"
-                } hover:${!isPublic ? "bg-blue-500" : "bg-gray-600"}`}
+                } hover:${!isPublic ? "bg-blue-500" : "bg-gray-600"} text-white`}
                 onClick={() => setIsPublic(false)}
               >
                 Private
@@ -259,16 +259,11 @@ const Dashboard = () => {
             <div className="flex space-x-4">
               <Button
                 onClick={handleCreateWorkspace}
-                className="bg-blue-600 hover:bg-blue-500"
+                className="bg-blue-600 hover:bg-blue-500 text-white"
               >
                 Create
               </Button>
-              <Button
-                onClick={() => setIsOpen(false)}
-                className="bg-gray-500 hover:bg-gray-600"
-              >
-                Cancel
-              </Button>
+              
             </div>
           </DialogDescription>
         </DialogContent>

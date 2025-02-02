@@ -31,7 +31,8 @@ const Header = ({ workspaceId }) => {
 
         {
           pathname.startsWith("/workspace/") && (
-            <Button onClick={goToDashboard} className="bg-blue-500 hover:bg-blue-600">
+            <Button onClick={goToDashboard} className="bg-blue-500 hover:bg-blue-600 text-white">
+
             Go to Dashboard
           </Button>
           )
