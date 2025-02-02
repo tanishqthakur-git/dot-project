@@ -1,34 +1,30 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
-import { getFirestore} from "firebase/firestore";
-import 'firebase/firestore';
+import { getFirestore } from "firebase/firestore";
+import { getDatabase } from "firebase/database";  // ✅ Import Realtime Database
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAMmc6y1d_RXhpUviWMaF4Grs25lki0-NE",
-  authDomain: "ai-code-editor-846c4.firebaseapp.com",
-  projectId: "ai-code-editor-846c4",
-  storageBucket: "ai-code-editor-846c4.firebasestorage.app",
-  messagingSenderId: "366858665230",
-  appId: "1:366858665230:web:98ea6919a4bf7e8bb82b5f"
+  apiKey: "AIzaSyDfRE78M63UCUl5IfgNXnUgUiTpnfGbrnA",
+  authDomain: "ai-code-6d461.firebaseapp.com",
+  projectId: "ai-code-6d461",
+  storageBucket: "ai-code-6d461.firebasestorage.app",
+  messagingSenderId: "239747401831",
+  appId: "1:239747401831:web:5052bd7dd20c8dd8b86cc2",
+  measurementId: "G-MZEX9DPYGE"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
+const auth = getAuth(app);
 const db = getFirestore(app);
 const firestore = getFirestore(app);
-const auth = getAuth(app);
+const rtdb = getDatabase(app);  // ✅ Initialize Realtime Database
 
+// Set Auth Persistence
 setPersistence(auth, browserLocalPersistence)
-  .then(() => {
-    console.log("Firebase Auth Persistence Set to Local");
-  })
-  .catch((error) => {
-    console.error("Firebase Auth Persistence Error:", error);
-  });
+  .then(() => console.log("Firebase Auth Persistence Set to Local"))
+  .catch((error) => console.error("Firebase Auth Persistence Error:", error));
 
-export { auth, db , firestore };
-
-
+export { auth, db, rtdb, firestore };
 export default app;

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { Globe, Lock } from "lucide-react"; // Import icons
 import { useRouter } from "next/navigation";
 import { auth, db } from "@/config/firebase";
 import {
@@ -25,6 +26,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import ShowMembers from "@/components/Members";
 
 const toastOptions = {
   position: "top-right",
@@ -165,19 +167,25 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="h-screen w-screen bg-[#0F172A] text-white flex flex-col">
+    <div className="h-screen w-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white flex flex-col animate-gradient">
+
       <ToastContainer />
       <Header />
 
       <div className="flex justify-between items-center p-6">
-        <h1 className="text-2xl font-bold text-blue-300">Your Workspaces</h1>
+        <h1 className="text-4xl border-b border-blue-500 font-mono text-blue-300">Your Workspaces :</h1>
 
-        <Button
-          onClick={createWorkspace}
-          className="bg-blue-600 hover:bg-blue-500 text-white"
-        >
-          <PlusCircle size={18} className="mr-2" /> Create Workspace
-        </Button>
+        
+      <Button
+        onClick={createWorkspace}
+        className="relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg shadow-md group hover:from-purple-700 hover:to-blue-700 transform transition-all duration-300 ease-out hover:scale-105"
+      >
+        <span className="absolute left-0 inset-y-0 flex items-center pl-2 group-hover:translate-x-2 transition-all duration-300 ease-out">
+          <PlusCircle size={22} />
+        </span>
+        <span className="ml-4 group-hover:ml-6 transition-all duration-300 ease-out">Create Workspace</span>
+      </Button>
+
       </div>
 
       <div className="flex-1 overflow-y-auto p-6">
@@ -192,33 +200,43 @@ const Dashboard = () => {
             ) : (
               workspaces.map((ws) => (
                 <Card
-                  key={ws.id}
-                  className="relative group bg-[#1E293B] border border-blue-500"
-                >
-                  <CardContent className="p-4">
-                    <Link href={`/workspace/${ws.id}`} className="block">
-                      <h2 className="text-lg font-semibold text-blue-300">
+                key={ws.id}
+                className="relative group border border-blue-500 bg-opacity-10 backdrop-blur-md p-2 bg-slate-950 rounded-xl transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/50"
+              >
+                <CardContent className="p-6 flex flex-col gap-4">
+                  <Link href={`/workspace/${ws.id}`} className="block">
+                    <div className="flex flex-col gap-3">
+                      <h2 className="text-3xl font-bold text-blue-400 tracking-wide group-hover:text-blue-300 transition-colors">
                         {ws.name}
                       </h2>
-                      <p className="text-sm text-gray-400">
-                        {ws.isPublic ? "Public Workspace" : "Private Workspace"}
+                      <p className="text-sm text-gray-300 font-mono">
+                        {ws.isPublic ? "🔓 Public Workspace" : "🔒 Private Workspace"}
                       </p>
-                      <p className="text-xs text-yellow-400">Role: {ws.role}</p>
-                    </Link>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-2 right-2 items-center justify-center text-red-500 hover:text-red-700  group-hover:block w-6 h-6"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        deleteWorkspace(ws.id);
-                      }}
-                    >
-                      <Trash2 size={18} />
-                    </Button>
-                  </CardContent>
-                </Card>
+              
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm text-yellow-400 font-medium">Role: {ws.role}</p>
+                        <span className="text-lg text-gray-200 bg-gray-900 px-4 py-2 rounded-full flex items-center gap-2 border border-gray-700">
+                          👥 People: <ShowMembers workspaceId={ws.id} />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+              
+                  {/* Delete Button with Smooth Animation */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 text-red-500 hover:text-red-700 hover:scale-110 transition-transform duration-200"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      deleteWorkspace(ws.id);
+                    }}
+                  >
+                    <Trash2 size={20} />
+                  </Button>
+                </CardContent>
+              </Card>
+              
               ))
             )}
           </div>
@@ -242,33 +260,46 @@ const Dashboard = () => {
               onChange={(e) => setWorkspaceName(e.target.value)}
               className="mb-4 text-white placeholder-white"
             />
+
             <div className="flex space-x-4 mb-4">
+              {/* Public Button */}
               <Button
-                className={`${isPublic ? "bg-blue-600" : "bg-gray-500"} hover:${
-                  isPublic ? "bg-blue-500" : "bg-gray-600"
-                } text-white`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium shadow-md transition-all duration-300 ${
+                  isPublic
+                    ? "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-indigo-600 hover:to-blue-500"
+                    : "bg-gray-600 hover:bg-gray-500"
+                }`}
                 onClick={() => setIsPublic(true)}
               >
+                <Globe className="w-5 h-5" />
                 Public
               </Button>
+
+              {/* Private Button */}
               <Button
-                className={`${
-                  !isPublic ? "bg-blue-600" : "bg-gray-500"
-                } hover:${!isPublic ? "bg-blue-500" : "bg-gray-600"} text-white`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium shadow-md transition-all duration-300 ${
+                  !isPublic
+                    ? "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-indigo-600 hover:to-blue-500"
+                    : "bg-gray-600 hover:bg-gray-500"
+                }`}
                 onClick={() => setIsPublic(false)}
               >
+                <Lock className="w-5 h-5" />
                 Private
               </Button>
             </div>
+
             <div className="flex space-x-4">
+              {/* Create Button */}
               <Button
                 onClick={handleCreateWorkspace}
-                className="bg-blue-600 hover:bg-blue-500 text-white"
+                className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-green-500 to-teal-600 hover:from-teal-600 hover:to-green-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"
               >
+                <PlusCircle className="w-5 h-5" />
                 Create
               </Button>
-              
             </div>
+
           </DialogDescription>
         </DialogContent>
       </Dialog>

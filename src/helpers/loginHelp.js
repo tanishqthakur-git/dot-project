@@ -1,5 +1,8 @@
 import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/config/firebase";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/config/firebase"; // Firestore instance
+
 // Function to log in with Email and Password
 export const loginWithEmailAndPassword = async (email, password) => {
   try {
@@ -13,16 +16,45 @@ export const loginWithEmailAndPassword = async (email, password) => {
   }
 };
 
-// Function to log in with Google
+// Function to log in with Google (with user existence check)
 export const loginWithGoogle = async () => {
-  const provider = new GoogleAuthProvider();
   try {
+    const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
+
     console.log("Logged in with Google:", user.displayName);
-    return user;
+
+    const userRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(userRef);
+
+    if (!docSnap.exists()) {
+      // Create a new user model in Firestore
+      await setDoc(userRef, {
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        authProvider: "google",
+        createdAt: serverTimestamp(),
+        lastLogin: serverTimestamp(),
+        twoFactorEnabled: false,
+        workspaces: {},
+        settings: {
+          theme: "dark",
+          fontSize: 14,
+          showLineNumbers: true,
+          aiSuggestions: true,
+        },
+        snippets: [],
+      });
+      console.log("New user created in Firestore:", user.displayName);
+    } else {
+      console.log("User already exists, logging in:", user.displayName);
+    }
+
+    return { success: true, user };
   } catch (error) {
     console.error("Error logging in with Google:", error.message);
-    throw new Error("Google login failed.");
+    return { success: false, error: error.message };
   }
 };

@@ -12,6 +12,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast, ToastContainer } from "react-toastify"; // Import Toast
 import "react-toastify/dist/ReactToastify.css"; // Import Toast styles
 import logout from "@/helpers/logoutHelp";
+import { FaArrowLeft } from "react-icons/fa"; // Importing the icon for the back button
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -112,6 +113,10 @@ const Profile = () => {
 
   const isGoogleUser = user && user.providerData.some((provider) => provider.providerId === "google.com");
 
+  const handleGoBack = () => {
+    router.push("/dashboard"); // Redirect to the dashboard
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4">
       <div className="w-full max-w-md bg-gray-800 rounded-lg shadow-lg p-6">
@@ -133,6 +138,15 @@ const Profile = () => {
           Logout
         </Button>
 
+        {/* Go Back to Dashboard Button */}
+        <button
+          onClick={handleGoBack}
+          className="w-full text-white bg-opacity-20 ring-1 ring-blue-400  bg-blue-600 hover:bg-blue-700 text-sm font-medium py-2 rounded-md mb-6 flex items-center justify-center"
+        >
+          <FaArrowLeft className="mr-2" />
+           Dashboard
+        </button>
+
         {/* Change Password Section */}
         {!isGoogleUser && (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -142,7 +156,7 @@ const Profile = () => {
               </Button>
             </DialogTrigger>
             <DialogContent className="bg-gray-800 p-6 rounded-lg">
-              <DialogTitle className="text-lg font-semibold text-blue-400 mb-4 text-white">Reset Password</DialogTitle>
+              <DialogTitle className="text-lg font-semibold mb-4 text-white">Reset Password</DialogTitle>
               <DialogDescription className="text-sm text-gray-400 mb-4">
                 Enter your email to receive a password reset link.
               </DialogDescription>
