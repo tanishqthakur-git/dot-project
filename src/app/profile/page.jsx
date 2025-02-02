@@ -1,5 +1,5 @@
 "use client"; // Mark this file as a client component
-
+import logout from "@/helpers/logoutHelp";
 import React, { useState, useEffect } from "react";
 import { auth, db } from "@/config/firebase"; // Firebase config
 import { useRouter } from "next/navigation";
