@@ -77,7 +77,7 @@ const NavPanel = ({ workspaceId, openFile }) => {
     const filesRef = collection(db, `workspaces/${workspaceId}/files`);
     const unsubscribeFiles = onSnapshot(filesRef, (snapshot) => {
       setFiles(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-      if (snapshot.docs.length > 0) openFile(snapshot.docs[0].data());
+      if (snapshot.docs.length > 0);
     });
 
     return () => {
