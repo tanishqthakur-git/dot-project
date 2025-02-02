@@ -1,23 +1,23 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "@/config/firebase";
 import Chat from "@/components/Chat";
 import Editor from "@/components/Editor";
-import NavPanel from "@/components/NavPanel";
 import SearchBar from "@/components/Searchbar";
-
+import { MessageCircle, Menu } from "lucide-react"; // Chat & Menu icons
 import Header from "@/components/Header";
-import { Menu } from "lucide-react";
+import ShowMembers from "@/components/Members";
+import NavPanel from "@/components/NavPanel";
 
 const Workspace = () => {
   const { workspaceId } = useParams(); // Get workspaceId from URL
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFile, setSelectedFile] = useState({ name: "sample", content: "" });
   const [workspaceName, setWorkspaceName] = useState("");
+  const [membersCount, setMembersCount] = useState(0);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isNavOpen, setIsNavOpen] = useState(false); // To toggle the chat panel
+  const [isNavOpen, setIsNavOpen] = useState(true);
 
   useEffect(() => {
     const fetchWorkspace = async () => {
@@ -27,7 +27,12 @@ const Workspace = () => {
       const workspaceSnap = await getDoc(workspaceRef);
 
       if (workspaceSnap.exists()) {
-        setWorkspaceName(workspaceSnap.data().name); // Get the name field from Firestore
+        const workspaceData = workspaceSnap.data();
+        setWorkspaceName(workspaceData.name);
+
+        const membersRef = collection(db, `workspaces/${workspaceId}/members`);
+        const membersSnap = await getDocs(membersRef);
+        setMembersCount(membersSnap.size);
       } else {
         console.error("Workspace not found");
       }
@@ -37,62 +42,70 @@ const Workspace = () => {
   }, [workspaceId]);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-950 text-white min-w-[1024px] min-h-[851px]">
-      <Header />
-      <SearchBar workspaceId={workspaceId} />
+    <div className="flex flex-col h-screen bg-gray-950 text-white min-w-[1024px] relative">
+      {/* Header */}
+      <Header workspaceId={workspaceId} />
+
       <div className="flex flex-1 overflow-hidden relative">
         {/* File Panel Toggle */}
         <button
-          className="absolute top-4 left-4 z-20 p-2 hover:bg-gray-800 rounded"
+          className="absolute top-3 left-4 z-20 p-2 hover:bg-gray-800 rounded"
           onClick={() => setIsNavOpen(!isNavOpen)}
         >
-          <Menu className="h-4 w-4" />
+          <Menu size={24} className="h-4 w-4" />
         </button>
 
         {/* Left Side - File & Folder Panel */}
         <nav
           className={`transition-all duration-300 ${
-            isNavOpen ? "w-1/5" : "w-0"
+            isNavOpen ? "w-[20%]" : "w-0"
           } overflow-hidden bg-gray-900 border-r border-gray-800 flex flex-col h-full`}
         >
           {isNavOpen && (
-            <section className="p-4 pt-14">
-              
+            <section className="pt-8">
               <NavPanel workspaceId={workspaceId} openFile={setSelectedFile} />
             </section>
           )}
         </nav>
 
         {/* Main - Editor Content */}
-        <main className={`transition-all duration-300 ${
-          isNavOpen && isChatOpen ? "w-3/5" : 
-          isNavOpen || isChatOpen ? "w-4/5" : "w-full"
-        } flex flex-col p-6 overflow-auto`}>
-          <h1 className="text-2xl font-bold mb-4">Workspace: {workspaceId}</h1>
-          <Editor />
+        <main className="flex-1 flex flex-col py-2 px-6 overflow-auto">
+          <div className="flex gap-12 items-center justify-between">
+            <h1 className="text-4xl border-b-2  border-gray-200 font-mono ml-8">Workspace: <span>{workspaceName}</span></h1>
+            <span className="text-lg text-gray-200 bg-gray-800 px-4 py-2 rounded-full flex items-center gap-3">
+               <p>people: {membersCount}</p>
+               <ShowMembers workspaceId={workspaceId} />
+            </span>
+          </div>
+
+          <Editor file={selectedFile} />
         </main>
-
-        {/* Right Side - Chat Panel */}
-        <aside
-          className={`transition-all duration-300 ${
-            isChatOpen ? "w-1/5" : "w-0"
-          } overflow-hidden bg-gray-900 border-l border-gray-800 flex flex-col h-full`}
-        >
-          {/* Chat Panel Toggle */}
-          <button
-            className="absolute top-4 right-4 z-20 p-2 hover:bg-gray-800 rounded"
-            onClick={() => setIsChatOpen(!isChatOpen)}
-          >
-            <Menu className="h-4 w-4" />
-          </button>
-
-          {isChatOpen && (
-            <section className="p-4 pt-14 h-full">
-              <Chat workspaceId={workspaceId} />
-            </section>
-          )}
-        </aside>
       </div>
+
+      {/* Chat Panel (Overlapping from Bottom) */}
+      <aside
+        className={`fixed bottom-0 right-0 transition-all duration-300 bg-gray-900 border-t border-gray-800 shadow-lg ${
+          isChatOpen ? "h-[60%]" : "h-0"
+        } overflow-hidden w-[30%]`}
+      >
+        {isChatOpen && (
+          <section className="h-full rounded-3xl">
+            <Chat workspaceId={workspaceId} isChatOpen={isChatOpen} setIsChatOpen={setIsChatOpen} />
+          </section>
+        )}
+      </aside>
+
+      {/* Chat Toggle Button */}
+      {
+        !isChatOpen && (
+            <button
+              className="fixed bottom-4 right-4 z-30 p-3 bg-gray-700 hover:bg-gray-600 text-white rounded-full shadow-lg"
+              onClick={() => setIsChatOpen(!isChatOpen)}
+            >
+            <MessageCircle className="h-6 w-6" />
+          </button>
+        )
+      }
     </div>
   );
 };

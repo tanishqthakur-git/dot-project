@@ -15,15 +15,15 @@ const languages = Object.entries(LANGUAGE_VERSIONS);
 const active_color = "blue.400";
 const LanguageSelector = ({ language, onSelect }) => {
   return (
-    <Box ml={2} mb={4} className="z-10">
-      Language:
+    <Box className="z-10 flex items-center">
+      <p className="mr-2">Language:</p>
       <MenuRoot isLazy>
         <MenuTrigger asChild>
-          <Button variant="outline" size="sm">
+          <Button variant="unstyled" size="sm">
             {language}
           </Button>
         </MenuTrigger>
-        <MenuContent bg="#110c1b">
+        <MenuContent  className="absolute top-12 z-10">
           {languages.map(([lang, version]) => (
             <MenuItem
               key={lang}

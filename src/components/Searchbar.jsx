@@ -1,16 +1,18 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { collection, query, where, getDocs, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { getAuth } from "firebase/auth"; // Import Firebase Auth
 import { db } from "@/config/firebase";
-import { Button, Input, Box, VStack, HStack, Text, Spinner } from "@chakra-ui/react";
+import { UserPlus, X } from "lucide-react"; // Import icons
 
 export default function SearchBar({ workspaceId }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const auth = getAuth(); // Get the authenticated user
-  const currentUserEmail = auth.currentUser?.email; // Get logged-in user's email
+  const [isOpen, setIsOpen] = useState(false); // Toggle search bar visibility
+  const auth = getAuth();
+  const currentUserEmail = auth.currentUser?.email;
+  const searchRef = useRef(null);
 
   useEffect(() => {
     if (searchTerm.length > 0) {
@@ -19,6 +21,20 @@ export default function SearchBar({ workspaceId }) {
       setUsers([]);
     }
   }, [searchTerm]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsOpen(false); // Close search bar when clicking outside
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
 
   const fetchUsers = async (term) => {
     setLoading(true);
@@ -35,9 +51,7 @@ export default function SearchBar({ workspaceId }) {
         ...doc.data(),
       }));
 
-      // Remove logged-in user from the results
       matchedUsers = matchedUsers.filter(user => user.email !== currentUserEmail);
-
       setUsers(matchedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -62,23 +76,51 @@ export default function SearchBar({ workspaceId }) {
   };
 
   return (
-    <Box p={4} w="100%">
-      <Input
-        placeholder="Search users by email..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-      {loading && <Spinner size="sm" mt={2} />}
-      <VStack mt={2} align="start">
-        {users.map((user) => (
-          <HStack key={user.id} w="100%" justify="space-between">
-            <Text>{user.email}</Text>
-            <Button colorScheme="blue" size="sm" onClick={() => inviteUser(user.id, user.email)}>
-              Invite
-            </Button>
-          </HStack>
-        ))}
-      </VStack>
-    </Box>
+    <div className="relative">
+      {/* Invite Button */}
+      <button
+        className="p-2 bg-gray-800 rounded-md hover:bg-gray-700 transition"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <UserPlus className="w-8 h-8 text-white" />
+      </button>
+
+      {/* Search Bar & Dropdown (Overlay) */}
+      {isOpen && (
+        <div ref={searchRef} className="absolute top-12 right-0 bg-gray-900 p-4 rounded-lg shadow-lg w-80 z-50">
+          {/* Search Input */}
+          <div className="flex items-center border-b border-gray-600 pb-2">
+            <input
+              type="text"
+              placeholder="Search users by email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-transparent text-white p-2 outline-none"
+            />
+            <button className="ml-2 text-gray-400 hover:text-white" onClick={() => setIsOpen(false)}>
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Loading Indicator */}
+          {loading && <div className="text-gray-400 text-center mt-2">Loading...</div>}
+
+          {/* User List */}
+          <div className="mt-2 max-h-60 overflow-y-auto">
+            {users.map((user) => (
+              <div key={user.id} className="flex justify-between items-center p-2 hover:bg-gray-800 rounded-md">
+                <span className="text-white">{user.email}</span>
+                <button
+                  className="p-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                  onClick={() => inviteUser(user.id, user.email)}
+                >
+                  Invite
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

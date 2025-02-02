@@ -102,14 +102,14 @@ const Dashboard = () => {
         isPublic,
       });
 
-      const membersRef = collection(
-        db,
-        `workspaces/${workspaceRef.id}/members`
-      );
+      const membersRef = collection(db, `workspaces/${workspaceRef.id}/members`);
       await setDoc(doc(membersRef, user.uid), {
         userId: user.uid,
         role: "owner",
+        displayName: user.displayName || "Unknown",
+        photoURL: user.photoURL || "/default-avatar.png",
       });
+      
 
       setWorkspaces([
         ...workspaces,
@@ -205,7 +205,7 @@ const Dashboard = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute top-2 right-2 flex items-center justify-center text-red-500 hover:text-red-700 hidden group-hover:block w-6 h-6"
+                      className="absolute top-2 right-2 items-center justify-center text-red-500 hover:text-red-700  group-hover:block w-6 h-6"
                       onClick={(e) => {
                         e.preventDefault();
                         deleteWorkspace(ws.id);
