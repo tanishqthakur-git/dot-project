@@ -16,6 +16,7 @@ const Header = ({ workspaceId }) => {
   const pathname = usePathname();
   const router = useRouter();
   const [isPublic, setIsPublic] = useState(true); // Default to public
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
     if (!workspaceId) return;
@@ -32,15 +33,39 @@ const Header = ({ workspaceId }) => {
     fetchWorkspaceDetails();
   }, [workspaceId]);
 
+  // Fetch User Info
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
+          setUserName(userSnap.data().displayName || user.email); // Use name if available, else email
+        } else {
+          setUserName(user.displayName);
+        }
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
+
   const goToDashboard = () => {
     router.push("/dashboard");
   };
 
   return (
-    <header className="flex items-center justify-between px-8 py-3 bg-[#1e293b] text-white shadow-lg">
-      <h1 className="text-2xl font-bold">AI Code Editor</h1>
+    <header className="flex items-center justify-between px-8 py-3 bg-[#0a0f1e] bg-opacity-80 backdrop-blur-lg border-b border-gray-700 shadow-xl">
+      {/* Title with Neon Glow Effect */}
+      <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 drop-shadow-lg animate-pulse">
+      ⚡ SynapseCode 
+      </h1>
+
       <InviteNotification />
-      <div className="flex items-center gap-4">
+
+      <div className="flex items-center gap-6">
         {/* Show SearchBar only if workspace is Public */}
         {pathname.startsWith("/workspace/") && isPublic && (
           <SearchBar workspaceId={workspaceId} />
@@ -49,16 +74,21 @@ const Header = ({ workspaceId }) => {
         {pathname.startsWith("/workspace/") && (
           <Button
             onClick={goToDashboard}
-            className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-indigo-600 hover:to-blue-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"
+            className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-indigo-600 hover:to-blue-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 transform hover:scale-110 hover:shadow-blue-500/50"
           >
             <LayoutDashboard className="w-5 h-5" />
-            Go to Dashboard
+            Dashboard
           </Button>
         )}
 
-        {/* Wrap the Avatar component in a Link */}
+        {/* Welcome Message */}
+        <p className="text-white text-sm font-medium opacity-90 animate-fadeIn">
+          Welcome back, <span className="font-bold text-blue-400">{userName}</span> 👋
+        </p>
+
+        {/* Profile Avatar */}
         <Link href="/profile">
-          <Avatar className="w-10 h-10 cursor-pointer border-2 border-white">
+          <Avatar className="w-10 h-10 cursor-pointer border-2 border-gray-500 transition-all duration-300 hover:border-blue-400 hover:scale-105">
             <AvatarImage src={auth.currentUser?.photoURL} alt="Profile" />
             <AvatarFallback>U</AvatarFallback>
           </Avatar>

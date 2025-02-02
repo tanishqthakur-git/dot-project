@@ -5,13 +5,13 @@ import { getDatabase } from "firebase/database";  // ✅ Import Realtime Databas
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDfRE78M63UCUl5IfgNXnUgUiTpnfGbrnA",
-  authDomain: "ai-code-6d461.firebaseapp.com",
-  projectId: "ai-code-6d461",
-  storageBucket: "ai-code-6d461.firebasestorage.app",
-  messagingSenderId: "239747401831",
-  appId: "1:239747401831:web:5052bd7dd20c8dd8b86cc2",
-  measurementId: "G-MZEX9DPYGE"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase

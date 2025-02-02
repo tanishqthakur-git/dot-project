@@ -157,18 +157,18 @@ const NavPanel = ({ workspaceId, openFile }) => {
 
           {(userRole === "contributor" || userRole === "owner") && (
             <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100">
-              <PlusCircle
+              <Folder
                 size={14}
-                className="text-gray-400 hover:text-blue-400 cursor-pointer"
+                className="text-blue-400 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   setSelectedParentFolder(folder.id);
                   setIsFolderDialogOpen(true);
                 }}
               />
-              <PlusCircle
+              <File
                 size={14}
-                className="text-gray-400 hover:text-green-400 cursor-pointer"
+                className="text-green-400 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   setCurrentFolderId(folder.id);
