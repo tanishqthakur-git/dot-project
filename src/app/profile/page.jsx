@@ -1,5 +1,5 @@
 "use client"; // Mark this file as a client component
-import logout from "@/helpers/logoutHelp";
+
 import React, { useState, useEffect } from "react";
 import { auth, db } from "@/config/firebase"; // Firebase config
 import { useRouter } from "next/navigation";
@@ -11,6 +11,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } 
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast, ToastContainer } from "react-toastify"; // Import Toast
 import "react-toastify/dist/ReactToastify.css"; // Import Toast styles
+import logout from "@/helpers/logoutHelp";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -112,87 +113,93 @@ const Profile = () => {
   const isGoogleUser = user && user.providerData.some((provider) => provider.providerId === "google.com");
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
-      <div className="w-full max-w-3xl p-6 bg-gray-800 rounded-lg shadow-xl">
-        <h1 className="text-4xl font-bold mb-8 text-center text-blue-500">Profile</h1>
-        {user ? (
-          <div className="mb-6 text-lg">
-            {/* Profile Image */}
-            <div className="flex justify-center mb-6">
-              <Avatar className="w-24 h-24 rounded-full border-4 border-blue-500">
-                <AvatarImage src="/robotic.png" alt="Profile" />
-                <AvatarFallback>U</AvatarFallback>
-              </Avatar>
-            </div>
-            <p className="mb-2">Name: <span className="font-semibold text-blue-400">{user.displayName}</span></p>
-            <p className="mb-2">Email: <span className="font-semibold text-blue-400">{user.email}</span></p>
-            <p className="mb-4">User ID: <span className="font-semibold text-blue-400">{user.uid}</span></p>
-            <Button onClick={logout} className="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-md shadow-md text-xl">Logout</Button>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4">
+      <div className="w-full max-w-md bg-gray-800 rounded-lg shadow-lg p-6">
+        {/* Profile Header */}
+        <div className="flex flex-col items-center mb-6">
+          <Avatar className="w-16 h-16 mb-4 border-2 border-blue-500">
+            <AvatarImage src={auth.currentUser?.photoURL} alt="Profile" />
+            <AvatarFallback>U</AvatarFallback>
+          </Avatar>
+          <h1 className="text-xl font-semibold text-blue-400">{user?.displayName || "User"}</h1>
+          <p className="text-sm text-gray-400">{user?.email}</p>
+        </div>
 
-            {!isGoogleUser && (
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md shadow-md text-xl">
-                    Change Password
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="bg-gray-800 p-8 rounded-lg shadow-lg">
-                  <DialogTitle className="text-3xl text-blue-500">Reset Your Password</DialogTitle>
-                  <DialogDescription className="text-lg text-gray-400 mb-6">
-                    Enter your email address to receive a password reset link.
-                  </DialogDescription>
-                  <Input
-                    type="email"
-                    placeholder="Your Email Address"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="mb-6 p-4 bg-gray-700 text-white border border-blue-500 rounded-md w-full text-xl"
-                  />
-                  <div className="flex flex-col gap-4 mt-6">
-                    {errorMessage && <p className="text-red-500 text-lg">{errorMessage}</p>}
-                    {successMessage && <p className="text-green-500 text-lg">{successMessage}</p>}
-                    <Button variant="secondary" onClick={() => setIsDialogOpen(false)} className="bg-gray-600 text-white hover:bg-gray-700 py-3 px-6 rounded-md text-lg">
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handlePasswordReset}
-                      disabled={isLoading}
-                      className={`${isLoading ? "bg-gray-500" : "bg-blue-600"} hover:bg-blue-700 text-white py-3 px-6 rounded-md text-lg`}
-                    >
-                      {isLoading ? "Sending..." : "Send Reset Link"}
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
+        {/* Logout Button */}
+        <Button
+          onClick={logout}
+          className="w-full bg-red-600 hover:bg-red-700 text-sm font-medium py-2 rounded-md mb-6 text-class"
+        >
+          Logout
+        </Button>
 
-            {isGoogleUser && <p className="mt-4 text-lg text-green-400">You signed in with Google.</p>}
-
-            {/* Invitations Section */}
-            <div className="mt-8">
-              <h2 className="text-2xl font-bold text-yellow-400 mb-4">Pending Invitations</h2>
-              {invites.length > 0 ? (
-                invites.map((workspaceId) => (
-                  <div key={workspaceId} className="bg-gray-700 p-4 rounded-md flex justify-between items-center mb-2">
-                    <span className="text-white">Workspace ID: {workspaceId}</span>
-                    <div className="space-x-2">
-                      <Button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md" onClick={() => handleAcceptInvite(workspaceId)}>
-                        Accept
-                      </Button>
-                      <Button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md" onClick={() => handleDeleteInvite(workspaceId)}>
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-400">No pending invitations.</p>
-              )}
-            </div>
-          </div>
-        ) : (
-          <p>Loading...</p>
+        {/* Change Password Section */}
+        {!isGoogleUser && (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-sm font-medium py-2 rounded-md mb-6 text-white">
+                Change Password
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-gray-800 p-6 rounded-lg">
+              <DialogTitle className="text-lg font-semibold text-blue-400 mb-4 text-white">Reset Password</DialogTitle>
+              <DialogDescription className="text-sm text-gray-400 mb-4">
+                Enter your email to receive a password reset link.
+              </DialogDescription>
+              <Input
+                type="email"
+                placeholder="Your Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mb-4 bg-gray-700 text-white border border-blue-500 rounded-md text-sm"
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => setIsDialogOpen(false)}
+                  className="bg-gray-600 hover:bg-gray-700 text-sm font-medium py-2 px-4 rounded-md"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handlePasswordReset}
+                  disabled={isLoading}
+                  className={`${isLoading ? "bg-gray-500" : "bg-blue-600"} hover:bg-blue-700 text-sm font-medium py-2 px-4 rounded-md text-white`}
+                >
+                  {isLoading ? "Sending..." : "Send Link"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         )}
+
+        {/* Invitations Section */}
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold text-yellow-400 mb-4">Pending Invitations</h2>
+          {invites.length > 0 ? (
+            invites.map((workspaceId) => (
+              <div key={workspaceId} className="bg-gray-700 p-3 rounded-md flex justify-between items-center mb-3">
+                <span className="text-sm text-gray-200">Workspace ID: {workspaceId}</span>
+                <div className="flex gap-2">
+                  <Button
+                    className="bg-green-500 hover:bg-green-600 text-xs font-medium px-3 py-1 rounded-md"
+                    onClick={() => handleAcceptInvite(workspaceId)}
+                  >
+                    Accept
+                  </Button>
+                  <Button
+                    className="bg-red-500 hover:bg-red-600 text-xs font-medium px-3 py-1 rounded-md"
+                    onClick={() => handleDeleteInvite(workspaceId)}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-gray-400">No pending invitations.</p>
+          )}
+        </div>
       </div>
 
       {/* Toast Container for notifications */}

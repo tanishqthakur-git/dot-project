@@ -5,12 +5,12 @@ import 'firebase/firestore';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyA0Wjx0LAR2E5lt9f_Tc9Ey-zmfZFyDsPI",
-  authDomain: "ai-code-editor.firebaseapp.com",
-  projectId: "ai-code-editor",
-  storageBucket: "ai-code-editor.firebasestorage.app",
-  messagingSenderId: "926023789287",
-  appId: "1:926023789287:web:68797a53e70a2893c11042"
+  apiKey: "AIzaSyAMmc6y1d_RXhpUviWMaF4Grs25lki0-NE",
+  authDomain: "ai-code-editor-846c4.firebaseapp.com",
+  projectId: "ai-code-editor-846c4",
+  storageBucket: "ai-code-editor-846c4.firebasestorage.app",
+  messagingSenderId: "366858665230",
+  appId: "1:366858665230:web:98ea6919a4bf7e8bb82b5f"
 };
 
 // Initialize Firebase
