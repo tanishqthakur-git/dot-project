@@ -1,50 +1,53 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { db } from "@/config/firebase";
-import { doc, setDoc, onSnapshot, collection } from "firebase/firestore";
+import { getDatabase, ref, set, onValue, remove } from "firebase/database";
 import { useAuth } from "@/context/AuthProvider";
+import { rtdb } from "@/config/firebase"; // Import Realtime Database
 
 const LiveCursor = ({ workspaceId }) => {
   const { user } = useAuth();
   const [cursors, setCursors] = useState({});
-
+  
   useEffect(() => {
-    if (!user) return;
+    if (!user || !workspaceId) return;
 
-    const handleMouseMove = async (event) => {
+    const cursorRef = ref(rtdb, `workspaces/${workspaceId}/cursors/${user.uid}`);
+
+    const handleMouseMove = (event) => {
       const { clientX, clientY } = event;
-
-      const cursorRef = doc(db, `workspaces/${workspaceId}/cursors`, user.uid);
-      await setDoc(
-        cursorRef,
-        {
-          x: clientX,
-          y: clientY,
-          displayName: user.displayName || "Anonymous",
-          color: `#${Math.floor(Math.random() * 16777215).toString(16)}`, // Random color
-        },
-        { merge: true }
-      );
+      
+      // Update cursor position in Realtime Database
+      set(cursorRef, {
+        x: clientX,
+        y: clientY,
+        displayName: user.displayName || "Anonymous",
+        color: `#${Math.floor(Math.random() * 16777215).toString(16)}`, // Random color
+        timestamp: Date.now(),
+      });
     };
 
     document.addEventListener("mousemove", handleMouseMove);
 
+    // Cleanup: Remove cursor when user leaves
+    const handleDisconnect = () => remove(cursorRef);
+    window.addEventListener("beforeunload", handleDisconnect);
+
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("beforeunload", handleDisconnect);
+      remove(cursorRef); // Remove cursor on component unmount
     };
   }, [user, workspaceId]);
 
   useEffect(() => {
     if (!workspaceId) return;
 
-    const cursorsRef = collection(db, `workspaces/${workspaceId}/cursors`);
-    const unsubscribe = onSnapshot(cursorsRef, (snapshot) => {
-      const cursorsData = {};
-      snapshot.forEach((doc) => {
-        cursorsData[doc.id] = doc.data();
-      });
-      setCursors(cursorsData);
+    const cursorsRef = ref(rtdb, `workspaces/${workspaceId}/cursors`);
+
+    // Listen for real-time cursor updates
+    const unsubscribe = onValue(cursorsRef, (snapshot) => {
+      setCursors(snapshot.val() || {});
     });
 
     return () => unsubscribe();

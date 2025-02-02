@@ -142,13 +142,13 @@ const Dashboard = () => {
               }
               toast.dismiss(confirmationToast); // Dismiss the confirmation toast after action
             }}
-            className="bg-red-600 hover:bg-red-500"
+            className="bg-red-600 hover:bg-red-500 text-white"
           >
             Delete
           </Button>
           <Button
             onClick={() => toast.dismiss(confirmationToast)} // Dismiss the toast without action
-            className="bg-gray-500 hover:bg-gray-600"
+            className="bg-gray-500 hover:bg-gray-600 text-white"
           >
             Cancel
           </Button>

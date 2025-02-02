@@ -26,7 +26,7 @@ const InviteNotification = () => {
       }
     });
 
-    return () => unsubscribe(); // Cleanup listener on unmount
+    return () => unsubscribe();
   }, [user]);
 
   const handleAcceptInvite = async (workspaceId) => {
@@ -70,44 +70,53 @@ const InviteNotification = () => {
     }
   };
 
-  const handleDismiss = (workspaceId) => {
-    setInvites((prev) => prev.filter((id) => id !== workspaceId));
-  };
-
   return (
-    <div className="fixed bottom-5 right-5 space-y-3 z-50">
+    <div className="fixed top-5 right-5 space-y-3 z-50">
       <AnimatePresence>
         {invites.map((workspaceId) => (
           <motion.div
             key={workspaceId}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            className="relative"
           >
-            <Card className="w-96 shadow-lg border border-gray-200 bg-white rounded-2xl">
-              <CardHeader className="flex justify-between items-center border-b p-4  ">
-                <CardTitle className="text-lg font-semibold text-black">Workspace Invite</CardTitle>
-                <button onClick={() => handleDismiss(workspaceId)} className="text-gray-500 hover:text-gray-700">
-                  <X size={18} />
-                </button>
-              </CardHeader>
-              <CardContent className="p-4">
-                <p className="text-gray-700 text-sm">
-                  You have been invited to join workspace: <span className="font-medium">{workspaceId}</span>
-                </p>
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    onClick={() => handleAcceptInvite(workspaceId)}
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
+            <Card className="w-96 shadow-xl border border-gray-700 bg-gray-900 rounded-xl backdrop-blur-sm">
+              <CardHeader className="p-4 pb-2">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-lg font-semibold text-white">
+                    Workspace Invite
+                  </CardTitle>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => handleDeleteInvite(workspaceId)}
+                    className="text-gray-400 hover:text-white transition-colors"
                   >
-                    Accept
-                  </Button>
+                    <X size={20} strokeWidth={2} />
+                  </motion.button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <p className="text-gray-300 text-sm mb-4">
+                  You've been invited to join:
+                  <span className="block font-mono text-blue-400 mt-1 truncate">
+                    {workspaceId}
+                  </span>
+                </p>
+                <div className="flex justify-end gap-3">
                   <Button
                     onClick={() => handleDeleteInvite(workspaceId)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
+                    className="bg-transparent hover:bg-gray-800 text-red-400 border border-red-400/30 hover:border-red-400/50 rounded-lg px-4 py-2 transition-all"
                   >
                     Decline
+                  </Button>
+                  <Button
+                    onClick={() => handleAcceptInvite(workspaceId)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30"
+                  >
+                    Accept
                   </Button>
                 </div>
               </CardContent>
