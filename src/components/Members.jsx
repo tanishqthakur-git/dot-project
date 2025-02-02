@@ -77,7 +77,7 @@ export default function ShowMembers({ workspaceId }) {
         {members.slice(0, 4).map((member, index) => (
           <img
             key={member.id}
-            src={auth.currentUser?.photoURL || "/robotic.png"}
+            src={member.photoURL || "/robotic.png"}
             alt={""}
             className="w-8 rounded-full border-2 border-white shadow-lg"
             style={{ zIndex: members.length - index }}
@@ -109,7 +109,7 @@ export default function ShowMembers({ workspaceId }) {
             {members.map((member) => (
               <div key={member.id} className="flex items-center p-2 hover:bg-gray-800 rounded-md">
                 <img
-                  src={auth.currentUser?.photoURL || "/robotic.png"}
+                  src={member.photoURL || "/robotic.png"}
                   alt={""}
                   className="w-8 h-8 rounded-full mr-3"
                 />

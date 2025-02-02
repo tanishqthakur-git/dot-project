@@ -71,7 +71,7 @@ const InviteNotification = () => {
   };
 
   return (
-    <div className="fixed top-5 right-5 space-y-3 z-50">
+    <div className="fixed top-[500px] right-5 space-y-3 z-[9999]">
       <AnimatePresence>
         {invites.map((workspaceId) => (
           <motion.div

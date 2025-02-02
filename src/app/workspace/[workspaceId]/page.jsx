@@ -80,6 +80,7 @@ const Workspace = () => {
           <div className="flex gap-12 items-center justify-between">
             <h1 className="text-4xl border-b-2  border-gray-200 font-mono ml-8">Workspace: <span>{workspaceName}</span></h1>
             <span className="text-lg text-gray-200 bg-gray-800 px-4 py-2 rounded-full flex items-center gap-3">
+               <SearchBar workspaceId={workspaceId} />
                <p>people: {membersCount}</p>
                <ShowMembers workspaceId={workspaceId} />
             </span>
