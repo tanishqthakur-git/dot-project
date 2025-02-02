@@ -73,6 +73,9 @@ export default function SearchBar({ workspaceId }) {
 
   const inviteUser = async (userId, userEmail) => {
     // Custom confirmation dialog using react-hot-toast
+
+    if (!confirmInvite) return;
+
     try {
       const userRef = doc(db, "users", userId);
       await updateDoc(userRef, {
@@ -88,8 +91,7 @@ export default function SearchBar({ workspaceId }) {
           primary: '#3b82f6',
           secondary: 'white',
         },
-      }, );
-
+      });
     } catch (error) {
       console.error("Error sending invitation:", error);
       toast.error("Failed to send invitation", {
@@ -106,13 +108,13 @@ export default function SearchBar({ workspaceId }) {
   };
 
   return (
-    <div className="relative">
+    <div className="relative ">
       {/* Invite Button */}
       <button
-        className="p-2 bg-gray-800 rounded-md hover:bg-gray-700 transition"
+        className="p-2 bg-gray-800 rounded-full hover:bg-gray-700 transition"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <UserPlus className="w-8 h-8 text-white" />
+        <UserPlus className="w-7 h-8 text-white" />
       </button>
 
       {/* Search Bar & Dropdown (Overlay) */}
@@ -154,7 +156,7 @@ export default function SearchBar({ workspaceId }) {
 
       {/* Toast Container */}
       <Toaster
-        position="top-center"
+        position="right-center"
         toastOptions={{
           className: 'dark:bg-gray-800 dark:text-white',
         }}

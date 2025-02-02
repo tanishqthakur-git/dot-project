@@ -176,15 +176,16 @@ const Dashboard = () => {
         <h1 className="text-4xl border-b border-blue-500 font-mono text-blue-300">Your Workspaces :</h1>
 
         
-      <Button
-        onClick={createWorkspace}
-        className="relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg shadow-md group hover:from-purple-700 hover:to-blue-700 transform transition-all duration-300 ease-out hover:scale-105"
-      >
-        <span className="absolute left-0 inset-y-0 flex items-center pl-2 group-hover:translate-x-2 transition-all duration-300 ease-out">
-          <PlusCircle size={22} />
-        </span>
-        <span className="ml-4 group-hover:ml-6 transition-all duration-300 ease-out">Create Workspace</span>
-      </Button>
+        <Button
+  onClick={createWorkspace}
+  className="relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg shadow-md group hover:from-purple-700 hover:to-blue-700 transform transition-all duration-300 ease-out hover:scale-105 z-0"
+>
+  <span className="absolute left-0 inset-y-0 flex items-center pl-2 group-hover:translate-x-2 transition-all duration-300 ease-out">
+    <PlusCircle size={22} />
+  </span>
+  <span className="ml-4 group-hover:ml-6 transition-all duration-300 ease-out">Create Workspace</span>
+</Button>
+
 
       </div>
 

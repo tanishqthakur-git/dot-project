@@ -67,9 +67,9 @@ const Header = ({ workspaceId }) => {
 
       <div className="flex items-center gap-6">
         {/* Show SearchBar only if workspace is Public */}
-        {pathname.startsWith("/workspace/") && isPublic && (
+        {/* {pathname.startsWith("/workspace/") && isPublic && (
           <SearchBar workspaceId={workspaceId} />
-        )}
+        )} */}
 
         {pathname.startsWith("/workspace/") && (
           <Button
