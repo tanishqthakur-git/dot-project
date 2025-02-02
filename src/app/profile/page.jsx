@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import logout from "@/helpers/logoutHelp";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -65,11 +66,12 @@ const Profile = () => {
     if (!user) return;
 
     try {
-      // Step 1: Add user to the workspace as a contributor
-      const membersRef = collection(db, `workspaces/${workspaceId}/members`);
-      await setDoc(doc(membersRef, user.uid), {
+      const membersRef = doc(db, `workspaces/${workspaceId}/members`, user.uid);
+      await setDoc(membersRef, {
         userId: user.uid,
         role: "contributor",
+        displayName: user.displayName || "Unknown",
+        photoURL: user.photoURL || "/default-avatar.png",
       });
 
       // Step 2: Remove the invite from the user's document
@@ -121,6 +123,7 @@ const Profile = () => {
             <p className="mb-2">Name: <span className="font-semibold text-blue-400">{user.displayName}</span></p>
             <p className="mb-2">Email: <span className="font-semibold text-blue-400">{user.email}</span></p>
             <p className="mb-4">User ID: <span className="font-semibold text-blue-400">{user.uid}</span></p>
+            <Button onClick={logout} className="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-md shadow-md text-xl">Logout</Button>
 
             {!isGoogleUser && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

@@ -1,51 +1,56 @@
-"use client"
-import { useState} from "react";
-import { Box, Button, Text} from "@chakra-ui/react";
+"use client";
+import { useState } from "react";
 import { executeCode } from "../api";
 
 const Output = ({ editorRef, language }) => {
   const [output, setOutput] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
+
   const runCode = async () => {
     const sourceCode = editorRef.current.getValue();
     if (!sourceCode) return;
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const { run: result } = await executeCode(language, sourceCode);
       setOutput(result.output.split("\n"));
       result.stderr ? setIsError(true) : setIsError(false);
     } catch (error) {
       console.log(error);
+      setIsError(true);
+      setOutput(['Error while running the code']);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Box w="20%">
-      <Button
-        variant="outline"
-        colorScheme="green"
-        mb={4}
-        isLoading={isLoading}
+    <div className=" ml-3 w-[30%] h-[565px] bg-black ring-1 ring-gray-700 rounded-lg shadow-lg ">
+      <button
         onClick={runCode}
+        className="w-full py-2 mb-4 text-white bg-indigo-400 hover:bg-gray-700 ring-1 ring-indigo-500 bg-opacity-10 rounded-md"
+        disabled={isLoading}
       >
-        Run Code
-      </Button>
-      <Box
-        height="75vh"
-        p={2}
-        color={isError ? "red.400" : ""}
-        border="1px solid"
-        borderRadius={4}
-        borderColor={isError ? "red.500" : "#333"}
+        {isLoading ? 'Compiling...' : 'Run Code'}
+      </button>
+      
+      <div
+        className={` p-4 rounded-md overflow-auto h-[90%] ${isError ? 'border-red-500 text-red-500' : ' text-white'} `}
       >
-        {output
-          ? output.map((line, i) => <Text key={i}>{line}</Text>)
-          : 'Click "Run Code" to see the output here'}
-      </Box>
-    </Box>
+        {isLoading ? (
+          <div className="flex justify-center items-center h-full">
+            <div className="w-16 h-16 border-4 border-t-teal-500 border-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : output ? (
+          output.map((line, i) => (
+            <p key={i} className="text-sm whitespace-pre-wrap overflow-auto">{line}</p>
+          ))
+        ) : (
+          <p className="text-gray-400">Click "Run Code" to see the output here</p>
+        )}
+      </div>
+    </div>
   );
 };
+
 export default Output;

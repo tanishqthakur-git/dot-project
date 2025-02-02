@@ -1,4 +1,5 @@
 "use client";
+import { Moon, Sun, FileText, Sparkles, Wrench } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import Editor, { useMonaco } from "@monaco-editor/react";
 import axios from "axios";
@@ -66,7 +67,7 @@ export default function CodeEditor({ file }) {
     setUpdatedCode(value);
 
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => autoSaveFile(value), 1000);
+    timeoutRef.current = setTimeout(() => autoSaveFile(value), 0);
   };
 
   // Auto-save file content
@@ -128,42 +129,43 @@ export default function CodeEditor({ file }) {
   };
 
   return (
-    <div className="bg-green-400">
-      <div className="flex gap-4 mb-4">
-        <button
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-          onClick={() => setTheme(theme === "vs-dark" ? "light" : "vs-dark")}
-        >
-          Toggle Theme
-        </button>
-        <button
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
-          onClick={generateDocs}
-          disabled={isLoading}
-        >
-          {isLoading ? "Generating..." : "Generate Docs"}
-        </button>
-        <button
-          className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded"
-          onClick={fixSyntaxErrors}
-          disabled={isFixing}
-        >
-          {isFixing ? "Fixing..." : "Fix Syntax"}
-        </button>
-      </div>
-
-      {file && (
-        <div className="bg-gray-800 text-white px-4 py-2 rounded flex items-center justify-between w-full mb-2">
-          <span className="text-sm">📝 Editing: {file.name}</span>
-        </div>
-      )}
-
-      <Box>
-        <HStack spacing={4}>
-          <Box w="80%">
-            <LanguageSelector language={codeLanguage} onSelect={onSelect} />
+    <div className="mt-6">
+      <Box className="relative" >
+        <div className="flex">
+          <Box w="76%" >
+            <div className="flex justify-between pr-12 pb-4 ">
+              {file && (
+                  <div className="flex items-center bg-gray-900 text-white px-4 py-2 rounded-md shadow-md border border-gray-700 w-40">
+                    <FileText size={16} className="mr-2 text-gray-400" />
+                    <span className="text-sm text-gray-300 line-clamp-1">{file.name}</span>
+                  </div>
+                )}
+                 <div className="flex gap-4">
+                    <button
+                      className="flex text-sm  items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-full shadow-md hover:bg-gray-700 transition ring-1 ring-gray-600 bg-opacity-40" 
+                      onClick={() => setTheme(theme === "vs-dark" ? "light" : "vs-dark")}
+                    >
+                      {theme === "vs-dark" ? <Sun size={16} /> : <Moon size={16} />} Theme
+                    </button>
+                    <button
+                      className="flex text-sm  items-center gap-2 bg-blue-700 bg-opacity-20 ring-1 ring-blue-600 text-white px-4 py-2 rounded-full shadow-md hover:bg-blue-600 transition disabled:opacity-50"
+                      onClick={generateDocs}
+                      disabled={isLoading}
+                    >
+                      <Sparkles size={16} /> {isLoading ? "Generating..." : "Generate Docs"}
+                    </button>
+                    <button
+                      className="flex text-sm  items-center gap-2 bg-teal-600 bg-opacity-20 ring-1 ring-teal-600 text-white px-4 py-2 rounded-full shadow-md hover:bg-teal-600 transition disabled:opacity-50"
+                      onClick={fixSyntaxErrors}
+                      disabled={isFixing}
+                    >
+                      <Wrench size={16} /> {isFixing ? "Fixing..." : "Fix Syntax"}
+                    </button>
+                </div>
+               <LanguageSelector language={codeLanguage} onSelect={onSelect} />
+            </div>
             <Editor
-              height="500px"
+              height="515px"
               theme={theme}
               language={codeLanguage}
               defaultValue={CODE_SNIPPETS[codeLanguage]}
@@ -181,13 +183,13 @@ export default function CodeEditor({ file }) {
                   mode: "subword",
                   suppressSuggestions: false,
                 },
-                quickSuggestions: { other: true, comments: false, strings: true },
+                quickSuggestions: { other: true, comments: true, strings: true },
                 suggestSelection: "recentlyUsed",
               }}
             />
           </Box>
           <Output editorRef={editorRef} language={codeLanguage} />
-        </HStack>
+        </div>
       </Box>
     </div>
   );
