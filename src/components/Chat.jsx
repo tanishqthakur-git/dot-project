@@ -58,7 +58,7 @@ function Chatroom({ workspaceId, setIsChatOpen }) {
   const sendMessage = async () => {
     if (newMessage.trim() === "") return;
 
-    const imageUrl = "/robotic.png";
+    const imageUrl =auth.currentUser.photoURL;
 
     try {
       await addDoc(messagesRef, {
@@ -184,7 +184,7 @@ function Chatroom({ workspaceId, setIsChatOpen }) {
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Message..."
-            className="flex bg-gray-800 bg-opacity-60 border-gray-700 focus:border-gray-600 text-sm"
+            cclassName="flex bg-black border-gray-700 focus:border-gray-600 text-white placeholder-white text-sm"
           />
           <Button type="submit" size="sm" className="px-3 bg-gray-800 hover:bg-gray-700 text-white">
             Send

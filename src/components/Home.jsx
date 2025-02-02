@@ -18,7 +18,7 @@ export default function HomePage() {
         </p>
         <div className="flex justify-center gap-4">
           
-          <Button className="bg-blue-500 hover:bg-blue-600" onClick={() => window.location.href = "/register"} >
+          <Button className="bg-blue-500 hover:bg-blue-600 text-white" onClick={() => window.location.href = "/register"} >
             Sign Up / Log In
           </Button>
 
