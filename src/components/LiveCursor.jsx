@@ -16,7 +16,7 @@ const LiveCursor = ({ workspaceId }) => {
 
     const handleMouseMove = (event) => {
       const { clientX, clientY } = event;
-      
+
       // Update cursor position in Realtime Database
       set(cursorRef, {
         x: clientX,
@@ -59,14 +59,25 @@ const LiveCursor = ({ workspaceId }) => {
         userId !== user?.uid && cursor ? (
           <div
             key={userId}
-            className="absolute w-4 h-4 rounded-full opacity-80 transition-all duration-100"
+            className="absolute transition-all duration-75 ease-out"
             style={{
               left: cursor?.x || 0, // Fallback to 0 if undefined
               top: cursor?.y || 0, // Fallback to 0 if undefined
-              backgroundColor: cursor?.color || "#ffffff", // Default color
             }}
           >
-            <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-gray-700 text-white px-2 py-1 rounded">
+            {/* Cursor SVG */}
+           
+
+            {/* User Display Name */}
+            <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-gray-700 text-white px-2 py-1 rounded shadow-md">
+                <svg
+                className="absolute w-8 h-8 -top-6 left-1/2 -translate-x-1/2"
+                viewBox="0 0 24 24"
+                fill={cursor?.color || "#ffffff"}
+                xmlns="http://www.w3.org/2000/svg"
+                >
+                <path d="M4 4L20 12L12 20L4 4Z" />
+                </svg>
               {cursor?.displayName || "Anonymous"}
             </span>
           </div>

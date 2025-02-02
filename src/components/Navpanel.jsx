@@ -221,7 +221,7 @@ const NavPanel = ({ workspaceId, openFile }) => {
   };
 
   return (
-    <div className="bg-gray-900 text-gray-300 h-full w-64 flex flex-col border-r border-gray-700">
+    <div className="bg-gray-900 text-gray-300 h-full w-full flex flex-col border-r border-gray-700">
       <div className="p-4 border-b border-gray-700">
         <h2 className="text-sm font-semibold mb-4">FILE EXPLORER</h2>
         <div className="flex space-x-2">
