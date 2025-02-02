@@ -109,6 +109,10 @@ const Dashboard = () => {
         displayName: user.displayName || "Unknown",
         photoURL: user.photoURL || "/default-avatar.png",
       });
+
+        // ✅ Initialize empty cursor tracking
+      const cursorsRef = doc(db, `workspaces/${workspaceRef.id}`);
+      await setDoc(cursorsRef, { cursors: {} }, { merge: true });
       
 
       setWorkspaces([

@@ -1,5 +1,5 @@
 "use client"; // Mark this file as a client component
-
+import logout from "@/helpers/logoutHelp";
 import React, { useState, useEffect } from "react";
 import { auth, db } from "@/config/firebase"; // Firebase config
 import { useRouter } from "next/navigation";
@@ -9,12 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-<<<<<<< HEAD
-import logout from "@/helpers/logoutHelp";
-=======
 import { toast, ToastContainer } from "react-toastify"; // Import Toast
 import "react-toastify/dist/ReactToastify.css"; // Import Toast styles
->>>>>>> b58b98a5270e2384e4a278ea64d637baefea2e21
 
 const Profile = () => {
   const [user, setUser] = useState(null);
