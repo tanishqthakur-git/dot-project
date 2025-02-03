@@ -327,9 +327,9 @@ const NavPanel = ({ workspaceId, openFile }) => {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => {
-                  setCreatingType("folder");
                   setCreatingParentFolderId(null);
                   setNewItemName("");
+                  setCreatingType((prev) => (prev === "folder" ? null : "folder"));
                 }}
                 className="hover:bg-blue-700 bg-blue-500 bg-opacity-10 ring-1 ring-blue-500  px-2 py-1 rounded-md text-xs flex gap-1"
               > Add folder
@@ -337,9 +337,9 @@ const NavPanel = ({ workspaceId, openFile }) => {
               </button>
               <button
                 onClick={() => {
-                  setCreatingType("file");
                   setCreatingParentFolderId(null);
                   setNewItemName("");
+                  setCreatingType((prev) => (prev === "file" ? null : "file"));
                 }}
                 className=" hover:bg-orange-700 bg-orange-500 bg-opacity-10 ring-1 ring-orange-400  px-2 py-1 rounded-md flex items-center text-xs gap-1"
               >  Add file

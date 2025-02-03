@@ -77,13 +77,12 @@ const Workspace = () => {
         </nav>
 
         {/* Main - Editor Content */}
-        <main className="flex-1 flex flex-col py-2 overflow-auto">
-          <div className="flex gap-12 items-center justify-between">
-            <h1 className="text-2xl  w-[60%] text-center border-gray-200 font-mono ml-24">Workspace: <span className="text-indigo-400">{workspaceName}</span></h1>
+        <main className="flex-1 h-full flex flex-col py-2 overflow-auto">
+          <div className="flex h-[6%] gap-12 items-center justify-between">
+            <h1 className="text-2xl  w-[40%] text-center border-gray-200 font-mono ml-32">Workspace: <span className="text-indigo-400">{workspaceName}</span></h1>
             <div className="flex items-center gap-4 ">
               <div className="flex items-start bg-blue-800 bg-opacity-40 ring-1 ring-blue-500 px-4 py-1 rounded-md gap-2"> <SearchBar workspaceId={workspaceId} /> </div>
               <span className="text-lg text-gray-200 bg-slate-800 px-4 py-2  rounded-full flex items-center justify-center gap-3">
-                <p className="text-[14px] text-white">people: {membersCount}</p>
                 <ShowMembers workspaceId={workspaceId} />
               </span>
             </div>
@@ -95,9 +94,9 @@ const Workspace = () => {
 
       {/* Chat Panel (Overlapping from Bottom) */}
       <aside
-        className={`fixed bottom-0 right-0 transition-all duration-300 bg-gray-900 border-t border-gray-800 shadow-lg ${
-          isChatOpen ? "h-[83%]" : "h-0"
-        } overflow-hidden w-[30%]`}
+        className={`fixed bottom-0 right-0 transition-all duration-300  shadow-lg ${
+          isChatOpen ? "h-[82%]" : "h-0"
+        } overflow-hidden w-[45%]`}
       >
         {isChatOpen && (
             <Chat workspaceId={workspaceId} isChatOpen={isChatOpen} setIsChatOpen={setIsChatOpen} />
@@ -108,10 +107,10 @@ const Workspace = () => {
       {
         !isChatOpen && (
             <button
-              className="fixed bottom-4 right-4 z-30 p-3 bg-gray-700 hover:bg-gray-600 text-white rounded-full shadow-lg"
+              className="fixed bottom-6 right-10 z-30 py-3 font-mono px-5 flex items-center gap-2 text-xl bg-teal-700/30 ring-1 ring-teal-500  animate-bounce  hover:bg-teal-800 text-white rounded-full shadow-lg"
               onClick={() => setIsChatOpen(!isChatOpen)}
             >
-            <MessageCircle className="h-6 w-6" />
+             <MessageCircle className="h-8 w-8 " /> AI-Chat
           </button>
         )
       }

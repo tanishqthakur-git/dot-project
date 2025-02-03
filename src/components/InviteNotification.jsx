@@ -72,7 +72,7 @@ const InviteNotification = () => {
   };
 
   return (
-    <div className="fixed top-[530px] right-5 space-y-3 !z-[9999]">
+    <div className="fixed top-[30px] right-5 space-y-3 !z-[999999]">
       <AnimatePresence>
         {invites.map((workspaceId) => (
           <motion.div
@@ -83,7 +83,7 @@ const InviteNotification = () => {
             transition={{ type: "spring", stiffness: 200, damping: 20 }}
             className="relative"
           >
-            <div className="w-96 shadow-xl bg-opacity-80 bg-white ring-2 ring-green-500 rounded-xl backdrop-blur-sm">
+            <div className="w-96 shadow-xl  bg-slate-300 ring-2 ring-green-500 rounded-xl backdrop-blur-sm">
               <CardHeader className="p-4 pb-2">
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-lg font-semibold text-black">

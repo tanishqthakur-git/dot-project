@@ -1,19 +1,26 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { collection, query, where, getDocs, doc, updateDoc, arrayUnion } from "firebase/firestore";
-import { getAuth } from "firebase/auth"; // Import Firebase Auth
+import { getAuth } from "firebase/auth";
 import { db } from "@/config/firebase";
-import { UserPlus, X } from "lucide-react"; // Import icons
-import toast, { Toaster } from "react-hot-toast"; // Import react-hot-toast
+import { UserPlus, X } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function SearchBar({ workspaceId }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [isOpen, setIsOpen] = useState(false); // Toggle search bar visibility
+  const [isOpen, setIsOpen] = useState(false);
+  const [workspaceMembers, setWorkspaceMembers] = useState(new Set()); // Store members as a Set
   const auth = getAuth();
   const currentUserEmail = auth.currentUser?.email;
   const searchRef = useRef(null);
+
+  useEffect(() => {
+    if (workspaceId) {
+      fetchWorkspaceMembers();
+    }
+  }, [workspaceId]);
 
   useEffect(() => {
     if (searchTerm.length > 0) {
@@ -26,7 +33,7 @@ export default function SearchBar({ workspaceId }) {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setIsOpen(false); // Close search bar when clicking outside
+        setIsOpen(false);
       }
     };
     if (isOpen) {
@@ -36,6 +43,18 @@ export default function SearchBar({ workspaceId }) {
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
+
+  const fetchWorkspaceMembers = async () => {
+    try {
+      const membersQuery = collection(db, `workspaces/${workspaceId}/members`);
+      const membersSnapshot = await getDocs(membersQuery);
+      const membersSet = new Set(membersSnapshot.docs.map(doc => doc.id)); // Store member userIds
+      setWorkspaceMembers(membersSet);
+    } catch (error) {
+      console.error("Error fetching workspace members:", error);
+      toast.error("Failed to fetch workspace members");
+    }
+  };
 
   const fetchUsers = async (term) => {
     setLoading(true);
@@ -52,74 +71,40 @@ export default function SearchBar({ workspaceId }) {
         ...doc.data(),
       }));
 
-      matchedUsers = matchedUsers.filter(user => user.email !== currentUserEmail);
+      // Filter out current user and existing workspace members
+      matchedUsers = matchedUsers.filter(user => user.email !== currentUserEmail && !workspaceMembers.has(user.id));
+
       setUsers(matchedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
-      toast.error("Failed to fetch users", {
-        style: {
-          background: '#1f2937',
-          color: 'white',
-        },
-        iconTheme: {
-          primary: '#ef4444',
-          secondary: 'white',
-        },
-      });
+      toast.error("Failed to fetch users");
     } finally {
       setLoading(false);
     }
   };
 
   const inviteUser = async (userId, userEmail) => {
-    // Custom confirmation dialog using react-hot-toast
-
-  
     try {
       const userRef = doc(db, "users", userId);
       await updateDoc(userRef, {
         invites: arrayUnion(workspaceId),
       });
-      
-      toast.success(`${userEmail} has been invited.`, {
-        style: {
-          background: '#1f2937',
-          color: 'white',
-        },
-        iconTheme: {
-          primary: '#3b82f6',
-          secondary: 'white',
-        },
-      });
+
+      toast.success(`${userEmail} has been invited.`);
     } catch (error) {
       console.error("Error sending invitation:", error);
-      toast.error("Failed to send invitation", {
-        style: {
-          background: '#1f2937',
-          color: 'white',
-        },
-        iconTheme: {
-          primary: '#ef4444',
-          secondary: 'white',
-        },
-      });
+      toast.error("Failed to send invitation");
     }
   };
 
   return (
     <div className="relative flex items-center">
-      {/* Invite Button */}
-      <button ref={searchRef}
-        className=" rounded-full  transition flex items-start gap-2"
-        onClick={() => setIsOpen(!isOpen)}
-      >
+      <button ref={searchRef} className="rounded-full transition flex items-start gap-2" onClick={() => setIsOpen(!isOpen)}>
         <UserPlus className="w-5 h-5 text-white" />Invite
       </button>
 
-      {/* Search Bar & Dropdown (Overlay) */}
       {isOpen && (
         <div ref={searchRef} className="absolute top-10 right-0 bg-slate-800 p-4 rounded-lg shadow-lg w-96 z-50">
-          {/* Search Input */}
           <div className="flex items-center border-b border-gray-600 pb-2">
             <input
               type="text"
@@ -133,10 +118,8 @@ export default function SearchBar({ workspaceId }) {
             </button>
           </div>
 
-          {/* Loading Indicator */}
           {loading && <div className="text-gray-400 text-center mt-2">Loading...</div>}
 
-          {/* User List */}
           <div className="mt-2 max-h-60 overflow-y-auto">
             {users.map((user) => (
               <div key={user.id} className="flex justify-between items-center p-2 hover:bg-gray-800 rounded-md">
@@ -153,13 +136,7 @@ export default function SearchBar({ workspaceId }) {
         </div>
       )}
 
-      {/* Toast Container */}
-      <Toaster
-        position="right-center"
-        toastOptions={{
-          className: 'dark:bg-gray-800 dark:text-white',
-        }}
-      />
+      <Toaster position="right-center" />
     </div>
   );
 }

@@ -73,21 +73,24 @@ export default function ShowMembers({ workspaceId }) {
   return (
     <div className="relative">
       {/* Stacked Member Avatars */}
-      <div className="flex -space-x-4 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
-        {members.slice(0, 4).map((member, index) => (
-          <img
-            key={member.id}
-            src={member.photoURL || "/robotic.png"}
-            alt={""}
-            className="w-7 rounded-full border-2 border-white shadow-lg"
-            style={{ zIndex: members.length - index }}
-          />
-        ))}
-        {members.length > 4 && (
-          <div className="w-10 h-10 flex items-center justify-center bg-gray-800 text-white rounded-full border-2 border-white text-xs shadow-lg">
-            +{members.length - 4}
-          </div>
-        )}
+      <div className="flex gap-2 text-sm items-center">
+         People: {members.length}
+        <div className="flex -space-x-4 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
+          {members.slice(0, 4).map((member, index) => (
+            <img
+              key={member.id}
+              src={member.photoURL || "/robotic.png"}
+              alt={""}
+              className="w-7 rounded-full border-2 border-white shadow-lg"
+              style={{ zIndex: members.length - index }}
+            />
+          ))}
+          {members.length > 4 && (
+            <div className="w-10 h-10 flex items-center justify-center bg-gray-800 text-white rounded-full border-2 border-white text-xs shadow-lg">
+              +{members.length - 4}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Members Dropdown */}
