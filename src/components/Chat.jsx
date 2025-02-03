@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Initialize Gemini AI
-const genAI = new GoogleGenerativeAI("AIzaSyBw1nRXZx4-IVw4lX3c8G6rSLYT8XacEnE");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 function Chatroom({ workspaceId, setIsChatOpen }) {
   const [messages, setMessages] = useState([]);
