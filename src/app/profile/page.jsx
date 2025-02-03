@@ -60,7 +60,7 @@ const Profile = () => {
       setIsDialogOpen(false);
     } catch (error) {
       setErrorMessage("Error sending password reset email: " + error.message);
-      toast.error("Error sending password reset email: " + error.message); // Show error toast
+      toast.error("Error sending password reset email "); // Show error toast
     } finally {
       setIsLoading(false);
     }
@@ -75,7 +75,7 @@ const Profile = () => {
         userId: user.uid,
         role: "contributor",
         displayName: user.displayName || "Unknown",
-        photoURL: user.photoURL || "/default-avatar.png",
+        photoURL: user.photoURL || "/robotic.png",
       });
 
       // Step 2: Remove the invite from the user's document
@@ -123,7 +123,7 @@ const Profile = () => {
         {/* Profile Header */}
         <div className="flex flex-col items-center mb-6">
           <Avatar className="w-16 h-16 mb-4 border-2 border-blue-500">
-            <AvatarImage src={auth.currentUser?.photoURL} alt="Profile" />
+            <AvatarImage src={auth.currentUser?.photoURL || "/robotic.png"} alt="Profile" />
             <AvatarFallback>U</AvatarFallback>
           </Avatar>
           <h1 className="text-xl font-semibold text-blue-400">{user?.displayName || "User"}</h1>

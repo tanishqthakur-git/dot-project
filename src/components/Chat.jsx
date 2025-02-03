@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY);
 
 function Chatroom({ workspaceId, setIsChatOpen }) {
   const [messages, setMessages] = useState([]);
@@ -161,7 +161,7 @@ function Chatroom({ workspaceId, setIsChatOpen }) {
         <div className="flex justify-end gap-2">
           {!isCurrentUser && !isAI && (
             <img
-              src={msg.imageUrl}
+              src={msg.imageUrl || "/robotic.png"}
               alt="Avatar"
               className="w-6 h-6 rounded-full flex-shrink-0"
             />
@@ -186,7 +186,7 @@ function Chatroom({ workspaceId, setIsChatOpen }) {
 
           {isCurrentUser && !isAI && (
             <img
-              src={msg.imageUrl}
+              src={msg.imageUrl || "/robotic.png"}
               alt="Avatar"
               className="w-6 h-6 rounded-full flex-shrink-0"
             />

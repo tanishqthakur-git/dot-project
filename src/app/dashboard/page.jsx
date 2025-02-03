@@ -111,7 +111,7 @@ const Dashboard = () => {
         userId: user.uid,
         role: "owner",
         displayName: user.displayName || "Unknown",
-        photoURL: user.photoURL || "/default-avatar.png",
+        photoURL: user.photoURL || "/robotic.png",
       });
 
       const cursorsRef = doc(db, `workspaces/${workspaceRef.id}`);
