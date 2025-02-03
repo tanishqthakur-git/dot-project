@@ -74,8 +74,7 @@ export default function SearchBar({ workspaceId }) {
   const inviteUser = async (userId, userEmail) => {
     // Custom confirmation dialog using react-hot-toast
 
-    if (!confirmInvite) return;
-
+  
     try {
       const userRef = doc(db, "users", userId);
       await updateDoc(userRef, {
@@ -108,18 +107,18 @@ export default function SearchBar({ workspaceId }) {
   };
 
   return (
-    <div className="relative ">
+    <div className="relative flex items-center">
       {/* Invite Button */}
-      <button
-        className="p-2 bg-gray-800 rounded-full hover:bg-gray-700 transition"
+      <button ref={searchRef}
+        className=" rounded-full  transition flex items-start gap-2"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <UserPlus className="w-7 h-8 text-white" />
+        <UserPlus className="w-5 h-5 text-white" />Invite
       </button>
 
       {/* Search Bar & Dropdown (Overlay) */}
       {isOpen && (
-        <div ref={searchRef} className="absolute top-12 right-0 bg-gray-900 p-4 rounded-lg shadow-lg w-80 z-50">
+        <div ref={searchRef} className="absolute top-10 right-0 bg-slate-800 p-4 rounded-lg shadow-lg w-96 z-50">
           {/* Search Input */}
           <div className="flex items-center border-b border-gray-600 pb-2">
             <input
@@ -127,7 +126,7 @@ export default function SearchBar({ workspaceId }) {
               placeholder="Search users by email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-transparent text-white p-2 outline-none"
+              className="w-full bg-transparent text-white p-2 text-sm outline-none"
             />
             <button className="ml-2 text-gray-400 hover:text-white" onClick={() => setIsOpen(false)}>
               <X className="w-5 h-5" />
@@ -141,9 +140,9 @@ export default function SearchBar({ workspaceId }) {
           <div className="mt-2 max-h-60 overflow-y-auto">
             {users.map((user) => (
               <div key={user.id} className="flex justify-between items-center p-2 hover:bg-gray-800 rounded-md">
-                <span className="text-white">{user.email}</span>
+                <span className="text-white text-sm">{user.email}</span>
                 <button
-                  className="p-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                  className="p-1 bg-blue-500 text-white rounded-md px-4 text-sm hover:bg-blue-600"
                   onClick={() => inviteUser(user.id, user.email)}
                 >
                   Invite

@@ -1,24 +1,28 @@
 "use client";
-import { Moon, Sun, FileText, Sparkles, Wrench } from "lucide-react";
+import { Moon, Sun, Sparkles, Wrench, File, Expand, Shrink, Settings } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import Editor, { useMonaco } from "@monaco-editor/react";
 import axios from "axios";
 import LanguageSelector from "./LanguageSelector";
 import { CODE_SNIPPETS } from "@/constants";
-import { Box, HStack } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import Output from "./Output";
 import { doc, getDoc, updateDoc, onSnapshot } from "firebase/firestore";
 import { db } from "@/config/firebase";
 
 export default function CodeEditor({ file }) {
-  const [theme, setTheme] = useState("vs-dark");
+  const [selectedTheme, setSelectedTheme] = useState("vs-dark");
+  const [fontSize, setFontSize] = useState(14);
+  const [showSettings, setShowSettings] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [updatedCode, setUpdatedCode] = useState("");
   const [isFixing, setIsFixing] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const monaco = useMonaco();
   const timeoutRef = useRef(null);
   const editorRef = useRef();
   const [codeLanguage, setCodeLanguage] = useState("javascript");
+  const settingsRef = useRef(null);
 
   useEffect(() => {
     if (file) {
@@ -26,14 +30,12 @@ export default function CodeEditor({ file }) {
     }
   }, [file]);
 
-  // Real-time syncing listener
   useEffect(() => {
     if (!file?.id || !file?.workspaceId) return;
 
     const filePath = `workspaces/${file.workspaceId}/files`;
     const fileRef = doc(db, filePath, file.id);
 
-    // Listening to Firestore updates in real-time
     const unsubscribe = onSnapshot(fileRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
@@ -43,7 +45,7 @@ export default function CodeEditor({ file }) {
       }
     });
 
-    return () => unsubscribe(); // Cleanup listener on unmount
+    return () => unsubscribe();
   }, [file]);
 
   const fetchFileContent = async () => {
@@ -52,8 +54,6 @@ export default function CodeEditor({ file }) {
       const filePath = `workspaces/${file.workspaceId}/files`;
       const fileRef = doc(db, filePath, file.id);
       const fileSnap = await getDoc(fileRef);
-
-      console.log("✅ Fetched file content:", fileSnap.data());
 
       if (fileSnap.exists()) {
         setUpdatedCode(fileSnap.data().content || "");
@@ -65,23 +65,16 @@ export default function CodeEditor({ file }) {
 
   const handleEditorChange = (value) => {
     setUpdatedCode(value);
-
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => autoSaveFile(value), 0);
   };
 
-  // Auto-save file content
   const autoSaveFile = async (content) => {
     if (!file?.id || !file?.workspaceId) return;
-
-    console.log("🚀 Auto-saving file...");
-
     try {
       const filePath = `workspaces/${file.workspaceId}/files`;
       const fileRef = doc(db, filePath, file.id);
       await updateDoc(fileRef, { content });
-
-      console.log("✅ Auto-saved file:", file.name);
     } catch (error) {
       console.error("Error auto-saving file:", error);
     }
@@ -102,8 +95,6 @@ export default function CodeEditor({ file }) {
     try {
       const res = await axios.post("/api/generate-documentation", { code: updatedCode, language: codeLanguage });
       const documentation = res.data.documentation;
-      console.log("Documentation: ", documentation);
-
       const commentedDocs = `\n\n${documentation}`;
       setUpdatedCode((prevCode) => prevCode + commentedDocs);
     } catch (error) {
@@ -117,7 +108,6 @@ export default function CodeEditor({ file }) {
     setIsFixing(true);
     try {
       const res = await axios.post("/api/get-errors", { code: updatedCode, codeLanguage });
-
       if (res.data.fixedCode) {
         setUpdatedCode(res.data.fixedCode);
       }
@@ -128,51 +118,116 @@ export default function CodeEditor({ file }) {
     }
   };
 
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+    setTimeout(() => editorRef.current?.layout(), 100);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setShowSettings(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const themes = [
+    { name: "Dark", value: "vs-dark" },
+    { name: "Light", value: "light" },
+    { name: "High Contrast", value: "hc-black" },
+  ];
+
   return (
-    <div className="mt-6">
-      <Box className="relative" >
+    <div className={`bg-slate-900 m-2 rounded-xl p-3 ${isExpanded ? "fixed inset-0 z-50 m-0" : "relative"}`}>
+      <Box className="relative">
         <div className="flex">
-          <Box w="76%" >
-            <div className="flex justify-between pr-12 pb-4 ">
+          <Box w={isExpanded ? "100%" : "78%"} transition="all 0.3s ease">
+            <div className="flex justify-between pr-12 pb-4">
               {file && (
-                  <div className="flex items-center bg-gray-900 text-white px-4 py-2 rounded-md shadow-md border border-gray-700 w-40">
-                    <FileText size={16} className="mr-2 text-gray-400" />
-                    <span className="text-sm text-gray-300 line-clamp-1">{file.name}</span>
-                  </div>
-                )}
-                 <div className="flex gap-4">
-                    <button
-                      className="flex text-sm  items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-full shadow-md hover:bg-gray-700 transition ring-1 ring-gray-600 bg-opacity-40" 
-                      onClick={() => setTheme(theme === "vs-dark" ? "light" : "vs-dark")}
-                    >
-                      {theme === "vs-dark" ? <Sun size={16} /> : <Moon size={16} />} Theme
-                    </button>
-                    <button
-                      className="flex text-sm  items-center gap-2 bg-blue-700 bg-opacity-20 ring-1 ring-blue-600 text-white px-4 py-2 rounded-full shadow-md hover:bg-blue-600 transition disabled:opacity-50"
-                      onClick={generateDocs}
-                      disabled={isLoading}
-                    >
-                      <Sparkles size={16} /> {isLoading ? "Generating..." : "Generate Docs"}
-                    </button>
-                    <button
-                      className="flex text-sm  items-center gap-2 bg-teal-600 bg-opacity-20 ring-1 ring-teal-600 text-white px-4 py-2 rounded-full shadow-md hover:bg-teal-600 transition disabled:opacity-50"
-                      onClick={fixSyntaxErrors}
-                      disabled={isFixing}
-                    >
-                      <Wrench size={16} /> {isFixing ? "Fixing..." : "Fix Syntax"}
-                    </button>
+                <div className="flex items-center bg-gray-900 text-white px-4 py-2 rounded-md shadow-md border border-gray-700 w-40">
+                  <File size={16} className="mr-2 text-orange-400" />
+                  <span className="text-sm text-gray-300 line-clamp-1">{file.name}</span>
                 </div>
-               <LanguageSelector language={codeLanguage} onSelect={onSelect} />
+              )}
+              <div className="flex gap-3 items-center ">
+                <div className="relative" ref={settingsRef}>
+                  <button
+                    className="flex items-center bg-gray-800 text-white p-2 rounded-full shadow-md hover:bg-gray-700 transition ring-1 ring-gray-600"
+                    onClick={() => setShowSettings(!showSettings)}
+                  >
+                    <Settings size={16} />
+                  </button>
+                  {showSettings && (
+                    <div className="absolute left-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl p-3 space-y-3 z-50">
+                      <div>
+                        <label className="text-xs text-gray-300 mb-1 block">Theme</label>
+                        <select
+                          className="w-full bg-gray-700 text-gray-200 text-xs p-1 rounded"
+                          value={selectedTheme}
+                          onChange={(e) => setSelectedTheme(e.target.value)}
+                        >
+                          {themes.map((theme) => (
+                            <option key={theme.value} value={theme.value}>
+                              {theme.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-300 mb-1 block">Font Size</label>
+                        <input
+                          type="range"
+                          min="10"
+                          max="24"
+                          value={fontSize}
+                          onChange={(e) => setFontSize(Number(e.target.value))}
+                          className="w-full bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                        />
+                        <span className="text-xs text-gray-300 block text-center">{fontSize}px</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <button
+                  className="flex items-center gap-1.5 bg-blue-700 bg-opacity-20 ring-1 ring-blue-600 text-white px-3 py-1.5 rounded-full shadow-md hover:bg-blue-600 transition disabled:opacity-50 text-xs"
+                  onClick={generateDocs}
+                  disabled={isLoading}
+                >
+                  <Sparkles size={14} /> {isLoading ? "Generating..." : "Docs"}
+                </button>
+                <button
+                  className="flex items-center gap-1.5 bg-teal-600 bg-opacity-20 ring-1 ring-teal-600 text-white px-3 py-1.5 rounded-full shadow-md hover:bg-teal-600 transition disabled:opacity-50 text-xs"
+                  onClick={fixSyntaxErrors}
+                  disabled={isFixing}
+                >
+                  <Wrench size={14} /> {isFixing ? "Fixing..." : "Fix"}
+                </button>
+                <button
+                  className="flex items-center gap-1.5 bg-purple-600 bg-opacity-20 ring-1 ring-purple-600 text-white px-3 py-1.5 rounded-full shadow-md hover:bg-purple-600 transition text-xs"
+                  onClick={toggleExpand}
+                >
+                  {isExpanded ? (
+                    <Shrink size={14} className="transition-transform" />
+                  ) : (
+                    <Expand size={14} className="transition-transform" />
+                  )}
+                  {isExpanded ? "Collapse" : "Expand"}
+                </button>
+              </div>
+              <LanguageSelector language={codeLanguage} onSelect={onSelect} />
             </div>
             <Editor
-              height="515px"
-              theme={theme}
+              height={isExpanded ? "calc(100vh - 100px)" : "515px"}
+              theme={selectedTheme}
               language={codeLanguage}
               defaultValue={CODE_SNIPPETS[codeLanguage]}
               value={updatedCode}
               onMount={onMount}
               onChange={handleEditorChange}
               options={{
+                fontSize: fontSize,
                 wordWrap: "on",
                 minimap: { enabled: false },
                 bracketPairColorization: true,
@@ -188,7 +243,7 @@ export default function CodeEditor({ file }) {
               }}
             />
           </Box>
-          <Output editorRef={editorRef} language={codeLanguage} />
+          {!isExpanded && <Output editorRef={editorRef} language={codeLanguage} />}
         </div>
       </Box>
     </div>

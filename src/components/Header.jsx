@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
-import SearchBar from "./Searchbar";
 import InviteNotification from "./InviteNotification";
 import { auth } from "@/config/firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -57,7 +56,7 @@ const Header = ({ workspaceId }) => {
   };
 
   return (
-    <header className="flex items-center justify-between px-8 py-3 bg-[#0a0f1e] bg-opacity-80 backdrop-blur-lg border-b border-gray-700 shadow-xl">
+    <header className="flex items-center justify-between px-8 py-3 bg-[#0a0f1e] bg-opacity-80 backdrop-blur-lg border-b border-gray-700 shadow-xl z-20">
       {/* Title with Neon Glow Effect */}
       <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 drop-shadow-lg animate-pulse">
       ⚡ SynapseCode 
@@ -66,10 +65,6 @@ const Header = ({ workspaceId }) => {
       <InviteNotification />
 
       <div className="flex items-center gap-6">
-        {/* Show SearchBar only if workspace is Public */}
-        {/* {pathname.startsWith("/workspace/") && isPublic && (
-          <SearchBar workspaceId={workspaceId} />
-        )} */}
 
         {pathname.startsWith("/workspace/") && (
           <Button
