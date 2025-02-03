@@ -43,7 +43,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [workspaceName, setWorkspaceName] = useState("");
-  const [isPublic, setIsPublic] = useState(false);
+  const [isPublic, setIsPublic] = useState(true);
   const router = useRouter();
   const user = auth.currentUser;
 
@@ -139,6 +139,7 @@ const Dashboard = () => {
                 await deleteDoc(doc(db, `workspaces/${workspaceId}`));
                 setWorkspaces(workspaces.filter((ws) => ws.id !== workspaceId));
                 toast.success("Workspace deleted successfully!", toastOptions);
+                
               } catch (error) {
                 toast.error("Failed to delete workspace.", toastOptions);
               }
@@ -176,15 +177,15 @@ const Dashboard = () => {
         <h1 className="text-4xl border-b border-blue-500 font-mono text-blue-300">Your Workspaces :</h1>
 
         
-        <Button
-  onClick={createWorkspace}
-  className="relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg shadow-md group hover:from-purple-700 hover:to-blue-700 transform transition-all duration-300 ease-out hover:scale-105 z-0"
->
-  <span className="absolute left-0 inset-y-0 flex items-center pl-2 group-hover:translate-x-2 transition-all duration-300 ease-out">
-    <PlusCircle size={22} />
-  </span>
-  <span className="ml-4 group-hover:ml-6 transition-all duration-300 ease-out">Create Workspace</span>
-</Button>
+      <Button
+        onClick={createWorkspace}
+        className="relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg shadow-md group hover:from-purple-700 hover:to-blue-700 transform transition-all duration-300 ease-out hover:scale-105 z-0"
+      >
+        <span className="absolute left-0 inset-y-0 flex items-center pl-2 group-hover:translate-x-2 transition-all duration-300 ease-out">
+          <PlusCircle size={22} />
+        </span>
+        <span className="ml-4 group-hover:ml-6 transition-all duration-300 ease-out">Create Workspace</span>
+      </Button>
 
 
       </div>
@@ -202,7 +203,7 @@ const Dashboard = () => {
               workspaces.map((ws) => (
                 <Card
                 key={ws.id}
-                className="relative group border border-blue-500 bg-opacity-10 backdrop-blur-md p-2 bg-slate-950 rounded-xl transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/50"
+                className="relative group border border-blue-500 bg-opacity-10 backdrop-blur-md p-2 bg-slate-900 rounded-xl transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/50"
               >
                 <CardContent className="p-6 flex flex-col gap-4">
                   <Link href={`/workspace/${ws.id}`} className="block">
@@ -222,19 +223,23 @@ const Dashboard = () => {
                       </div>
                     </div>
                   </Link>
-              
-                  {/* Delete Button with Smooth Animation */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-2 right-2 text-red-500 hover:text-red-700 hover:scale-110 transition-transform duration-200"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      deleteWorkspace(ws.id);
-                    }}
-                  >
-                    <Trash2 size={20} />
-                  </Button>
+
+                  {
+                     ws.role === "owner" && (
+                      <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 text-red-500 hover:text-red-700 hover:scale-110 transition-transform duration-200"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        deleteWorkspace(ws.id);
+                      }}
+                    >
+                      <Trash2 size={20} />
+                    </Button>
+                    )
+                  }
+                 
                 </CardContent>
               </Card>
               
@@ -252,14 +257,14 @@ const Dashboard = () => {
         <DialogContent className="bg-[#1E293B] text-white">
           <DialogTitle>Create Workspace</DialogTitle>
           <DialogDescription>
-            <p>
+            <p className="mb-2">
               Enter the name of the workspace and select if it should be public.
             </p>
             <Input
               placeholder="Workspace Name"
               value={workspaceName}
               onChange={(e) => setWorkspaceName(e.target.value)}
-              className="mb-4 text-white placeholder-white"
+              className="mb-4 text-white placeholder-white ring-1 ring-gray-400"
             />
 
             <div className="flex space-x-4 mb-4">

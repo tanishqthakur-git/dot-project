@@ -6,7 +6,7 @@ import { db } from "@/config/firebase";
 import Chat from "@/components/Chat";
 import Editor from "@/components/Editor";
 import SearchBar from "@/components/Searchbar";
-import { MessageCircle, Menu } from "lucide-react"; // Chat & Menu icons
+import { MessageCircle, Menu, PanelLeftOpen } from "lucide-react"; // Chat & Menu icons
 import Header from "@/components/Header";
 import ShowMembers from "@/components/Members";
 import NavPanel from "@/components/NavPanel";
@@ -56,11 +56,14 @@ const Workspace = () => {
       <div className="flex flex-1 overflow-hidden relative">
         {/* File Panel Toggle */}
         <button
-          className="absolute top-3 left-4 z-20 p-2 hover:bg-gray-800 rounded"
+          className="absolute top-1 left-4 z-20 p-2 hover:bg-gray-800 rounded"
           onClick={() => setIsNavOpen(!isNavOpen)}
         >
-          <Menu size={24} className="h-4 w-4" />
-        </button>
+            <PanelLeftOpen 
+              size={24} 
+              className="h-7 w-7 text-gray-300 hover:text-white transition-colors"
+            />
+        </button> 
 
         {/* Left Side - File & Folder Panel */}
         <nav
@@ -69,21 +72,21 @@ const Workspace = () => {
           } overflow-hidden bg-gray-900 border-r border-gray-800 flex flex-col h-full`}
         >
           {isNavOpen && (
-            <section className="pt-8">
               <NavPanel workspaceId={workspaceId} openFile={setSelectedFile} />
-            </section>
           )}
         </nav>
 
         {/* Main - Editor Content */}
-        <main className="flex-1 flex flex-col py-2 px-6 overflow-auto">
+        <main className="flex-1 flex flex-col py-2 overflow-auto">
           <div className="flex gap-12 items-center justify-between">
-            <h1 className="text-4xl border-b-2  border-gray-200 font-mono ml-8">Workspace: <span>{workspaceName}</span></h1>
-            <span className="text-lg text-gray-200 bg-gray-800 px-4 py-2 rounded-full flex items-center gap-3">
-               <SearchBar workspaceId={workspaceId} />
-               <p>people: {membersCount}</p>
-               <ShowMembers workspaceId={workspaceId} />
-            </span>
+            <h1 className="text-2xl  w-[60%] text-center border-gray-200 font-mono ml-24">Workspace: <span className="text-indigo-400">{workspaceName}</span></h1>
+            <div className="flex items-center gap-4 ">
+              <div className="flex items-start bg-blue-800 bg-opacity-40 ring-1 ring-blue-500 px-4 py-1 rounded-md gap-2"> <SearchBar workspaceId={workspaceId} /> </div>
+              <span className="text-lg text-gray-200 bg-slate-800 px-4 py-2  rounded-full flex items-center justify-center gap-3">
+                <p className="text-[14px] text-white">people: {membersCount}</p>
+                <ShowMembers workspaceId={workspaceId} />
+              </span>
+            </div>
           </div>
 
           <Editor file={selectedFile} />
@@ -93,13 +96,11 @@ const Workspace = () => {
       {/* Chat Panel (Overlapping from Bottom) */}
       <aside
         className={`fixed bottom-0 right-0 transition-all duration-300 bg-gray-900 border-t border-gray-800 shadow-lg ${
-          isChatOpen ? "h-[60%]" : "h-0"
+          isChatOpen ? "h-[83%]" : "h-0"
         } overflow-hidden w-[30%]`}
       >
         {isChatOpen && (
-          <section className="h-full rounded-3xl">
             <Chat workspaceId={workspaceId} isChatOpen={isChatOpen} setIsChatOpen={setIsChatOpen} />
-          </section>
         )}
       </aside>
 

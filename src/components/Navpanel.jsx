@@ -6,6 +6,7 @@ import {
   addDoc,
   deleteDoc,
   doc,
+  updateDoc,
   onSnapshot,
 } from "firebase/firestore";
 import { db, auth } from "@/config/firebase";
@@ -18,27 +19,17 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 
 const NavPanel = ({ workspaceId, openFile }) => {
   const [folders, setFolders] = useState([]);
   const [files, setFiles] = useState([]);
   const [folderStates, setFolderStates] = useState({});
   const [userRole, setUserRole] = useState(null);
-  const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
-  const [isFileDialogOpen, setIsFileDialogOpen] = useState(false);
-  const [newFolderName, setNewFolderName] = useState("");
-  const [newFileName, setNewFileName] = useState("");
-  const [currentFolderId, setCurrentFolderId] = useState(null);
-  const [selectedParentFolder, setSelectedParentFolder] = useState(null);
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [creatingType, setCreatingType] = useState(null);
+  const [creatingParentFolderId, setCreatingParentFolderId] = useState(null);
+  const [newItemName, setNewItemName] = useState("");
+  const [renamingItem, setRenamingItem] = useState(null);
   const router = useRouter();
 
   const truncateName = (name) => {
@@ -77,7 +68,6 @@ const NavPanel = ({ workspaceId, openFile }) => {
     const filesRef = collection(db, `workspaces/${workspaceId}/files`);
     const unsubscribeFiles = onSnapshot(filesRef, (snapshot) => {
       setFiles(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-      if (snapshot.docs.length > 0);
     });
 
     return () => {
@@ -88,33 +78,81 @@ const NavPanel = ({ workspaceId, openFile }) => {
   }, [workspaceId]);
 
   const toggleFolder = (folderId) => {
-    setFolderStates((prevState) => ({
-      ...prevState,
-      [folderId]: !prevState[folderId],
+    setFolderStates((prev) => ({
+      ...prev,
+      [folderId]: !prev[folderId],
     }));
   };
 
-  const createFolder = async () => {
-    if (!newFolderName) return;
-    await addDoc(collection(db, `workspaces/${workspaceId}/folders`), {
-      name: newFolderName,
-      parentFolderId: selectedParentFolder,
-    });
-    setNewFolderName("");
-    setSelectedParentFolder(null);
-    setIsFolderDialogOpen(false);
+  const handleDragStart = (e, item, type) => {
+    e.stopPropagation();
+    setDraggedItem({ id: item.id, type });
   };
 
-  const createFile = async () => {
-    if (!newFileName) return;
-    await addDoc(collection(db, `workspaces/${workspaceId}/files`), {
-      name: newFileName,
-      folderId: currentFolderId,
-      workspaceId,
-    });
-    setNewFileName("");
-    setIsFileDialogOpen(false);
-    setCurrentFolderId(null);
+  const handleDragOver = (e, targetFolderId) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e, targetFolderId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!draggedItem || draggedItem.id === targetFolderId) return;
+
+    try {
+      const isFolder = draggedItem.type === "folder";
+      const collectionName = isFolder ? "folders" : "files";
+      const fieldName = isFolder ? "parentFolderId" : "folderId";
+
+      await updateDoc(
+        doc(db, `workspaces/${workspaceId}/${collectionName}/${draggedItem.id}`),
+        { [fieldName]: targetFolderId || null }
+      );
+    } catch (error) {
+      console.error("Error moving item:", error);
+    }
+    setDraggedItem(null);
+  };
+
+  const createItem = async (folderid) => {
+    if (!newItemName) return;
+
+    try {
+      if (creatingType === "folder") {
+        await addDoc(collection(db, `workspaces/${workspaceId}/folders`), {
+          name: newItemName,
+          parentFolderId: creatingParentFolderId,
+        });
+      } else {
+        await addDoc(collection(db, `workspaces/${workspaceId}/files`), {
+          name: newItemName,
+          folderId: creatingParentFolderId,
+          workspaceId,
+        });
+      }
+      setNewItemName("");
+      setCreatingType(null);
+      setCreatingParentFolderId(null);
+      setFolderStates({ ...folderStates, [folderid]: true });
+
+    } catch (error) {
+      console.error("Error creating item:", error);
+    }
+  };
+
+  const renameItem = async () => {
+    if (!renamingItem?.name) return;
+
+    try {
+      const collectionName = renamingItem.type === "folder" ? "folders" : "files";
+      await updateDoc(
+        doc(db, `workspaces/${workspaceId}/${collectionName}/${renamingItem.id}`),
+        { name: renamingItem.name }
+      );
+      setRenamingItem(null);
+    } catch (error) {
+      console.error("Error renaming item:", error);
+    }
   };
 
   const deleteItem = async (type, id) => {
@@ -140,8 +178,15 @@ const NavPanel = ({ workspaceId, openFile }) => {
     const folderFiles = files.filter((file) => file.folderId === folder.id);
 
     return (
-      <div key={folder.id} className="ml-4 border-l border-gray-700">
-        <div className="flex items-center justify-between group hover:bg-gray-800 px-2 py-1 rounded transition-colors">
+      <div
+        key={folder.id}
+        className=" ml-3 border-l border-gray-700"
+        draggable
+        onDragStart={(e) => handleDragStart(e, folder, "folder")}
+        onDragOver={(e) => handleDragOver(e, folder.id)}
+        onDrop={(e) => handleDrop(e, folder.id)}
+      >
+        <div className="flex items-center justify-between group hover:bg-gray-800 px-1 py-2 rounded transition-colors">
           <div
             className="flex items-center flex-1 cursor-pointer"
             onClick={() => toggleFolder(folder.id)}
@@ -152,7 +197,23 @@ const NavPanel = ({ workspaceId, openFile }) => {
               <ChevronRight size={16} className="mr-1" />
             )}
             <Folder size={16} className="mr-2 text-blue-400" />
-            <span className="text-sm">{truncateName(folder.name)}</span>
+            {renamingItem?.id === folder.id ? (
+              <input
+                className="text-sm bg-gray-800 text-white px-2 py-1 rounded"
+                value={renamingItem.name}
+                onChange={(e) => setRenamingItem({ ...renamingItem, name: e.target.value })}
+                onBlur={renameItem}
+                onKeyPress={(e) => e.key === "Enter" && renameItem()}
+                autoFocus
+              />
+            ) : (
+              <span
+                className="text-sm"
+                onDoubleClick={() => setRenamingItem({ id: folder.id, name: folder.name, type: "folder" })}
+              >
+                {truncateName(folder.name)}
+              </span>
+            )}
           </div>
 
           {(userRole === "contributor" || userRole === "owner") && (
@@ -162,17 +223,21 @@ const NavPanel = ({ workspaceId, openFile }) => {
                 className="text-blue-400 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setSelectedParentFolder(folder.id);
-                  setIsFolderDialogOpen(true);
+                  setCreatingType((prev) => (prev === "folder" ? null : "folder"));
+                  setCreatingParentFolderId(folder.id);
+                  setNewItemName("");
+                  setFolderStates({ ...folderStates, [folder.id]: true });
                 }}
               />
               <File
                 size={14}
-                className="text-green-400 cursor-pointer"
+                className="text-orange-400 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setCurrentFolderId(folder.id);
-                  setIsFileDialogOpen(true);
+                  setCreatingType((prev) => (prev === "file" ? null : "file"));
+                  setCreatingParentFolderId(folder.id);
+                  setNewItemName("");
+                  setFolderStates({ ...folderStates, [folder.id]: true });
                 }}
               />
               <Trash
@@ -188,19 +253,52 @@ const NavPanel = ({ workspaceId, openFile }) => {
         </div>
 
         {folderStates[folder.id] && (
-          <div className="ml-2">
+          <div className="ml-1">
+            {creatingType && creatingParentFolderId === folder.id && (
+              <div className="ml-4 flex items-center px-2 py-1">
+                <input
+                  className="text-sm bg-gray-800 text-white px-2  py-1 rounded flex-1"
+                  placeholder={`New ${creatingType} name`}
+                  value={newItemName}
+                  onChange={(e) => setNewItemName(e.target.value)}
+                  onBlur={createItem}
+                  onKeyPress={(e) => e.key === "Enter" && createItem(folder.id)}
+                  autoFocus
+                />
+              </div>
+            )}
             {nestedFolders.map((nestedFolder) => renderFolder(nestedFolder))}
             {folderFiles.map((file) => (
               <div
                 key={file.id}
                 className="ml-6 flex items-center justify-between group hover:bg-gray-800 px-2 py-1 rounded transition-colors"
+                draggable
+                onDragStart={(e) => handleDragStart(e, file, "file")}
+                onDragOver={(e) => handleDragOver(e, folder.id)}
+                onDrop={(e) => handleDrop(e, folder.id)}
               >
                 <div
                   className="flex items-center cursor-pointer flex-1"
                   onClick={() => openFile(file)}
                 >
-                  <File size={16} className="mr-2 text-gray-400" />
-                  <span className="text-sm">{truncateName(file.name)}</span>
+                  <File size={16} className="mr-2 text-orange-400" />
+                  {renamingItem?.id === file.id ? (
+                    <input
+                      className="text-sm bg-gray-700 text-white px-1 rounded"
+                      value={renamingItem.name}
+                      onChange={(e) => setRenamingItem({ ...renamingItem, name: e.target.value })}
+                      onBlur={renameItem}
+                      onKeyPress={(e) => e.key === "Enter" && renameItem()}
+                      autoFocus
+                    />
+                  ) : (
+                    <span
+                      className="text-sm"
+                      onDoubleClick={() => setRenamingItem({ id: file.id, name: file.name, type: "file" })}
+                    >
+                      {truncateName(file.name)}
+                    </span>
+                  )}
                 </div>
                 {(userRole === "contributor" || userRole === "owner") && (
                   <Trash
@@ -223,31 +321,54 @@ const NavPanel = ({ workspaceId, openFile }) => {
   return (
     <div className="bg-gray-900 text-gray-300 h-full w-full flex flex-col border-r border-gray-700">
       <div className="p-4 border-b border-gray-700">
-        <h2 className="text-sm font-semibold mb-4">FILE EXPLORER</h2>
-        <div className="flex space-x-2">
+        <h2 className="text-sm font-semibold mb-8 text-right">FILE EXPLORER</h2>
+        <div className="flex space-x-2 justify-start ">
           {(userRole === "contributor" || userRole === "owner") && (
-            <>
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => {
-                  setSelectedParentFolder(null);
-                  setIsFolderDialogOpen(true);
+                  setCreatingType("folder");
+                  setCreatingParentFolderId(null);
+                  setNewItemName("");
                 }}
-                className="p-1 hover:bg-gray-700 rounded"
-              >
-                <Folder size={16} className="text-blue-400" />
+                className="hover:bg-blue-700 bg-blue-500 bg-opacity-10 ring-1 ring-blue-500  px-2 py-1 rounded-md text-xs flex gap-1"
+              > Add folder
+                <Folder size={16} className="text-gray-400 " />
               </button>
               <button
-                onClick={() => setIsFileDialogOpen(true)}
-                className="p-1 hover:bg-gray-700 rounded"
-              >
-                <File size={16} className="text-green-400" />
+                onClick={() => {
+                  setCreatingType("file");
+                  setCreatingParentFolderId(null);
+                  setNewItemName("");
+                }}
+                className=" hover:bg-orange-700 bg-orange-500 bg-opacity-10 ring-1 ring-orange-400  px-2 py-1 rounded-md flex items-center text-xs gap-1"
+              >  Add file
+                <File size={16} className="text-orange-400" />
               </button>
-            </>
+            </div>
           )}
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2">
+      <div
+        className="flex-1 overflow-y-auto py-2 px-1"
+        onDragOver={(e) => handleDragOver(e, null)}
+        onDrop={(e) => handleDrop(e, null)}
+      >
+        {creatingType && !creatingParentFolderId && (
+          <div className="flex items-center px-2 py-1">
+            <input
+              className="text-sm bg-gray-800 py-1 text-white px-3 rounded flex-1"
+              placeholder={`New ${creatingType} name`}
+              value={newItemName}
+              onChange={(e) => setNewItemName(e.target.value)}
+              onBlur={createItem}
+              onKeyPress={(e) => e.key === "Enter" && createItem()}
+              autoFocus
+            />
+          </div>
+        )}
+
         {folders
           .filter((folder) => !folder.parentFolderId)
           .map((folder) => renderFolder(folder))}
@@ -258,13 +379,33 @@ const NavPanel = ({ workspaceId, openFile }) => {
             <div
               key={file.id}
               className="flex items-center justify-between group hover:bg-gray-800 px-2 py-1 rounded transition-colors"
+              draggable
+              onDragStart={(e) => handleDragStart(e, file, "file")}
+              onDragOver={(e) => handleDragOver(e, null)}
+              onDrop={(e) => handleDrop(e, null)}
             >
               <div
-                className="flex items-center cursor-pointer flex-1"
+                className="flex items-center cursor-pointer flex-1 border-l border-gray-700 ml-1 px-2 py-1"
                 onClick={() => openFile(file)}
               >
-                <File size={16} className="mr-2 text-gray-400" />
-                <span className="text-sm">{truncateName(file.name)}</span>
+                <File size={16} className="mr-2 text-orange-400" />
+                {renamingItem?.id === file.id ? (
+                  <input
+                    className="text-sm bg-gray-700 text-white px-1 rounded"
+                    value={renamingItem.name}
+                    onChange={(e) => setRenamingItem({ ...renamingItem, name: e.target.value })}
+                    onBlur={renameItem}
+                    onKeyPress={(e) => e.key === "Enter" && renameItem()}
+                    autoFocus
+                  />
+                ) : (
+                  <span
+                    className="text-sm"
+                    onDoubleClick={() => setRenamingItem({ id: file.id, name: file.name, type: "file" })}
+                  >
+                    {truncateName(file.name)}
+                  </span>
+                )}
               </div>
               {(userRole === "contributor" || userRole === "owner") && (
                 <Trash
@@ -279,54 +420,6 @@ const NavPanel = ({ workspaceId, openFile }) => {
             </div>
           ))}
       </div>
-
-      <Dialog open={isFolderDialogOpen} onOpenChange={setIsFolderDialogOpen}>
-        <DialogContent className="bg-gray-800 text-white">
-          <DialogTitle>
-            {selectedParentFolder ? "New Nested Folder" : "New Folder"}
-          </DialogTitle>
-          <DialogDescription>
-            <Input
-              className="mb-4 bg-gray-700 border-gray-600 text-white"
-              placeholder="Enter folder name"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-            />
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="secondary"
-                onClick={() => setIsFolderDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button onClick={createFolder}>Create</Button>
-            </div>
-          </DialogDescription>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isFileDialogOpen} onOpenChange={setIsFileDialogOpen}>
-        <DialogContent className="bg-gray-800 text-white">
-          <DialogTitle>New File</DialogTitle>
-          <DialogDescription>
-            <Input
-              className="mb-4 bg-gray-700 border-gray-600 text-white"
-              placeholder="Enter file name"
-              value={newFileName}
-              onChange={(e) => setNewFileName(e.target.value)}
-            />
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="secondary"
-                onClick={() => setIsFileDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button onClick={createFile}>Create</Button>
-            </div>
-          </DialogDescription>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

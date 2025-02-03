@@ -34,11 +34,11 @@ export default function ShowMembers({ workspaceId }) {
           if (userId === user.uid) setUserRole(role); // Set the current user's role
           return {
             id: userId,
-            name: displayName || "Unknown User",
-            profilePicture: photoURL || "/default-avatar.png",
+            displayName: displayName || "Unknown User",
+            photoURL: photoURL || "/robotic.png",
             role: role || "Member",
           };
-        });
+        })
 
         setMembers(membersData);
         setLoading(false);
@@ -73,13 +73,13 @@ export default function ShowMembers({ workspaceId }) {
   return (
     <div className="relative">
       {/* Stacked Member Avatars */}
-      <div className="flex -space-x-5 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
+      <div className="flex -space-x-4 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
         {members.slice(0, 4).map((member, index) => (
           <img
             key={member.id}
             src={member.photoURL || "/robotic.png"}
             alt={""}
-            className="w-8 rounded-full border-2 border-white shadow-lg"
+            className="w-7 rounded-full border-2 border-white shadow-lg"
             style={{ zIndex: members.length - index }}
           />
         ))}
@@ -114,7 +114,7 @@ export default function ShowMembers({ workspaceId }) {
                   className="w-8 h-8 rounded-full mr-3"
                 />
                 <div className="flex-grow">
-                  <p className="text-white text-sm font-medium">{member.name}</p>
+                  <p className="text-white text-sm font-medium">{member.displayName}</p>
                   <p className="text-gray-400 text-xs">{member.role}</p>
                 </div>
                 {/* Show Exit button only for the current user (except owner) */}
