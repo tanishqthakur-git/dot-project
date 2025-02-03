@@ -84,7 +84,7 @@ const Header = ({ workspaceId }) => {
         {/* Profile Avatar */}
         <Link href="/profile">
           <Avatar className="w-10 h-10 cursor-pointer border-2 border-gray-500 transition-all duration-300 hover:border-blue-400 hover:scale-105">
-            <AvatarImage src={auth.currentUser?.photoURL} alt="Profile" />
+            <AvatarImage src={auth.currentUser?.photoURL || "/robotic.png"} alt="Profile" />
             <AvatarFallback>U</AvatarFallback>
           </Avatar>
         </Link>

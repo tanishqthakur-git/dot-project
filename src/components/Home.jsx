@@ -10,7 +10,7 @@ export default function HomePage() {
   const features = [
     { icon: <Users />, title: "Real-time Collaboration", description: "Work together seamlessly with live code editing.", titleColor: "text-green-400" },
     { icon: <Sparkles />, title: "AI-driven Tools", description: "Get intelligent code suggestions instantly.", titleColor: "text-yellow-400" },
-    { icon: <Code />, title: "Smart Linting", description: "Identify and fix errors as you type.", titleColor: "text-red-400" },
+    { icon: <Code />, title: "Smart Linting", description: "Identify and fix errors as you type with real-time AI suggestions.", titleColor: "text-red-400" },
     { icon: <GitBranch />, title: "Version Control", description: "Integrated Git support for easy tracking.", titleColor: "text-purple-400" },
   ];
 

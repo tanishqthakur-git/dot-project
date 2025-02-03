@@ -209,7 +209,7 @@ function Chatroom({ workspaceId, setIsChatOpen }) {
         <div className="flex justify-end gap-2">
           {!isCurrentUser && !isAI && (
             <img
-              src={msg.imageUrl}
+              src={msg.imageUrl || "/robotic.png"}
               alt="Avatar"
               className="w-6 h-6 rounded-full flex-shrink-0"
             />
@@ -274,7 +274,7 @@ function Chatroom({ workspaceId, setIsChatOpen }) {
 
           {isCurrentUser && !isAI && (
             <img
-              src={msg.imageUrl}
+              src={msg.imageUrl || "/robotic.png"}
               alt="Avatar"
               className="w-6 h-6 rounded-full flex-shrink-0"
             />
