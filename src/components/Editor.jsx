@@ -139,11 +139,11 @@ export default function CodeEditor({ file }) {
   ];
 
   return (
-    <div className={`bg-slate-900 m-2 rounded-xl p-3 ${isExpanded ? "fixed inset-0 z-50 m-0" : "relative"}`}>
-      <Box className="relative">
-        <div className="flex">
-          <Box w={isExpanded ? "100%" : "78%"} transition="all 0.3s ease">
-            <div className="flex justify-between pr-12 pb-4">
+    <div className={`bg-gray-900 m-2 h-[94%] rounded-xl p-3 ${isExpanded ? "fixed inset-0 z-50 m-0" : "relative"}`}>
+      <Box className="relative h-full">
+        <div className="flex h-full">
+          <Box w={isExpanded ? "100%" : "78%"} transition="all 0.3s ease" className=" bg-green-30 h-[100%]">
+            <div className="flex justify-between h-[10%] pr-12 ">
               {file && (
                 <div className="flex items-center bg-gray-900 text-white px-4 py-2 rounded-md shadow-md border border-gray-700 w-40">
                   <File size={16} className="mr-2 text-orange-400" />
@@ -218,7 +218,7 @@ export default function CodeEditor({ file }) {
               <LanguageSelector language={codeLanguage} onSelect={onSelect} />
             </div>
             <Editor
-              height={isExpanded ? "calc(100vh - 100px)" : "515px"}
+              height={isExpanded ? "calc(100vh - 100px)" : "92%"}
               theme={selectedTheme}
               language={codeLanguage}
               defaultValue={CODE_SNIPPETS[codeLanguage]}

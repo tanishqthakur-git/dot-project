@@ -25,7 +25,7 @@ const Output = ({ editorRef, language }) => {
   };
 
   return (
-    <div className=" ml-3 w-[30%] h-[565px] bg-black ring-1 ring-gray-700 rounded-lg shadow-lg ">
+    <div className=" ml-3 w-[30%] bg-black ring-1 ring-gray-700 rounded-lg shadow-lg ">
       <button
         onClick={runCode}
         className="w-full py-2 mb-4 text-white bg-indigo-700 hover:bg-indigo-900 ring-1 ring-indigo-500 bg-opacity-30 rounded-md"

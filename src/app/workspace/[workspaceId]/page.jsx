@@ -77,9 +77,9 @@ const Workspace = () => {
         </nav>
 
         {/* Main - Editor Content */}
-        <main className="flex-1 flex flex-col py-2 overflow-auto">
-          <div className="flex gap-12 items-center justify-between">
-            <h1 className="text-2xl  w-[60%] text-center border-gray-200 font-mono ml-24">Workspace: <span className="text-indigo-400">{workspaceName}</span></h1>
+        <main className="flex-1 h-full flex flex-col py-2 overflow-auto">
+          <div className="flex h-[6%] gap-12 items-center justify-between">
+            <h1 className="text-2xl  w-[40%] text-center border-gray-200 font-mono ml-32">Workspace: <span className="text-indigo-400">{workspaceName}</span></h1>
             <div className="flex items-center gap-4 ">
               <div className="flex items-start bg-blue-800 bg-opacity-40 ring-1 ring-blue-500 px-4 py-1 rounded-md gap-2"> <SearchBar workspaceId={workspaceId} /> </div>
               <span className="text-lg text-gray-200 bg-slate-800 px-4 py-2  rounded-full flex items-center justify-center gap-3">
