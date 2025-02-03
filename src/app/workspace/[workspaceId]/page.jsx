@@ -9,8 +9,8 @@ import SearchBar from "@/components/Searchbar";
 import { MessageCircle, Menu, PanelLeftOpen } from "lucide-react"; // Chat & Menu icons
 import Header from "@/components/Header";
 import ShowMembers from "@/components/Members";
-import NavPanel from "@/components/NavPanel";
 import LiveCursor from "@/components/LiveCursor";
+import NavPanel from "@/components/NavPanel";
 
 const Workspace = () => {
   const { workspaceId } = useParams(); // Get workspaceId from URL
