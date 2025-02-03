@@ -10,7 +10,7 @@ import { MessageCircle, Menu, PanelLeftOpen } from "lucide-react"; // Chat & Men
 import Header from "@/components/Header";
 import ShowMembers from "@/components/Members";
 import LiveCursor from "@/components/LiveCursor";
-import NavPanel from "@/components/NavPanel";
+import NavPanel from "@/components/Navpanel";
 
 const Workspace = () => {
   const { workspaceId } = useParams(); // Get workspaceId from URL
