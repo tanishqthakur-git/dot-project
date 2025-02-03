@@ -28,7 +28,7 @@ async function fixCodeWithAI(code) {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         // Create a prompt to fix syntax errors without needing language specification
-        const prompt = `Fix the syntax errors in the following code:\n\n${code}\n\nReturn only the corrected code without any comments or formatting like markdown.`;
+        const prompt = `Fix the syntax errors in the following code:\n\n${code}\n\nReturn only the corrected code without any comments or formatting like markdown.also if there are any existing comments , dont remove it `;
 
         const result = await model.generateContent(prompt);
         const fixedCode = result.response.text().replace(/```[a-z]*\n?/gi, "").trim(); // Remove markdown formatting

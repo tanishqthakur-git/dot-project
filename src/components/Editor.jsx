@@ -15,7 +15,7 @@ export default function CodeEditor({ file }) {
   const [fontSize, setFontSize] = useState(14);
   const [showSettings, setShowSettings] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [updatedCode, setUpdatedCode] = useState("");
+  const [updatedCode, setUpdatedCode] = useState("//Select a file to start coding..!");
   const [isFixing, setIsFixing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const monaco = useMonaco();
@@ -143,10 +143,10 @@ export default function CodeEditor({ file }) {
       <Box className="relative h-full">
         <div className="flex h-full">
           <Box w={isExpanded ? "100%" : "78%"} transition="all 0.3s ease" className=" bg-green-30 h-[100%]">
-            <div className="flex justify-between h-[10%] pr-12 ">
+            <div className="flex justify-between items-center h-[10%] pr-12 ">
               {file && (
-                <div className="flex items-center bg-gray-900 text-white px-4 py-2 rounded-md shadow-md border border-gray-700 w-40">
-                  <File size={16} className="mr-2 text-orange-400" />
+                <div className="flex items-center bg-gray-900 text-white px-4 max-h-[50px] rounded-md shadow-md border border-gray-700 w-40">
+                  <File size={16} className="mr-2 text-green-400" />
                   <span className="text-sm text-gray-300 line-clamp-1">{file.name}</span>
                 </div>
               )}

@@ -19,7 +19,7 @@ export async function POST(request) {
         Use the appropriate comment style for the provided language.
         Dont include the language at the top just the comments.
         do not include the code or any markdowns just the comments.
-        and amke it as detailed and descriptive as possible
+        and amke it as detailed and descriptive as possible.dont write the language
         Code:
         ${code}
         `;
