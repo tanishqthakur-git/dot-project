@@ -6,11 +6,19 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import Link from "next/link";
 import { toast, ToastContainer } from "react-toastify";
+import { auth, db } from "@/config/firebase";
+import { sendPasswordResetEmail } from "firebase/auth";
 import "react-toastify/dist/ReactToastify.css";
 
-// Custom Dark Theme for Toast
 const toastOptions = {
   position: "top-right",
   autoClose: 3000,
@@ -25,6 +33,10 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  
 
   const router = useRouter();
 
@@ -40,7 +52,7 @@ const Login = () => {
       }
     } catch (error) {
       setError(error.message);
-      toast.error("Login failed: " + error.message, toastOptions);
+      toast.error("Login failed ", toastOptions);
     }
   };
 
@@ -55,13 +67,29 @@ const Login = () => {
       }
     } catch (error) {
       setError(error.message);
-      toast.error("Google login failed: " + error.message, toastOptions);
+      toast.error("Google login failed ", toastOptions);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!email) return;
+    setIsLoading(true);
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      
+      toast.success("Password reset link sent to your email!"); // Show success toast
+      setIsDialogOpen(false);
+    } catch (error) {
+      
+      toast.error("Error sending password reset email "); // Show error toast
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="flex justify-center items-center h-screen bg-[#0f172a] text-white">
-      {/* Dark-themed Toast Container */}
       <ToastContainer theme="dark" />
       
       <Card className="w-96 bg-[#1e293b] border border-gray-500 shadow-2xl rounded-lg">
@@ -83,6 +111,43 @@ const Login = () => {
           <p className="text-center text-sm text-gray-300">
             Don't have an account? <Link href="/register" className="text-blue-400 hover:text-blue-500 hover:underline">Sign Up</Link>
           </p>
+
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="link" className="w-full text-blue-400 hover:text-blue-500 text-sm">
+                Forgot Password?
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-gray-800 p-6 rounded-lg">
+              <DialogTitle className="text-lg font-semibold mb-4 text-white">Reset Password</DialogTitle>
+              <DialogDescription className="text-sm text-gray-400 mb-4">
+                Enter your email to receive a password reset link.
+              </DialogDescription>
+              <Input
+                type="email"
+                placeholder="Your Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mb-4 bg-gray-700 text-white border border-blue-500 rounded-md text-sm"
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => setIsDialogOpen(false)}
+                  className="bg-gray-600 hover:bg-gray-700 text-sm font-medium py-2 px-4 rounded-md"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handlePasswordReset}
+                  disabled={isLoading}
+                  className={`${isLoading ? "bg-gray-500" : "bg-blue-600"} hover:bg-blue-700 text-sm font-medium py-2 px-4 rounded-md text-white`}
+                >
+                  {isLoading ? "Sending..." : "Send Link"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
     </div>

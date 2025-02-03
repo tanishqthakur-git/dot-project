@@ -19,7 +19,7 @@ export const signUpUser = async (email, password, displayName) => {
     const docSnap = await setDoc(userRef, {
       email: user.email,
       displayName: displayName || "Anonymous",
-      photoURL: user.photoURL || "",
+      photoURL: user.photoURL || "/robotic.png",
       authProvider: "email",
       createdAt: serverTimestamp(),
       lastLogin: serverTimestamp(),
@@ -57,7 +57,7 @@ export const signInWithGoogle = async () => {
         await setDoc(userRef, {
           email: user.email,
           displayName: user.displayName,
-          photoURL: user.photoURL,
+          photoURL: user.photoURL || "robotic.png",
           authProvider: "google",
           createdAt: serverTimestamp(),
           lastLogin: serverTimestamp(),

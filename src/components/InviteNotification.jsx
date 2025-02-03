@@ -39,7 +39,7 @@ const InviteNotification = () => {
         userId: user.uid,
         role: "contributor",
         displayName: user.displayName || "Unknown",
-        photoURL: user.photoURL,
+        photoURL: user.photoURL || "/robotic.png",
       });
 
       const userRef = doc(db, "users", user.uid);

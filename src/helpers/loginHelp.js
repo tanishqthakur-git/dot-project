@@ -33,7 +33,7 @@ export const loginWithGoogle = async () => {
       await setDoc(userRef, {
         email: user.email,
         displayName: user.displayName,
-        photoURL: user.photoURL,
+        photoURL: user.photoURL || "/robotic.png",
         authProvider: "google",
         createdAt: serverTimestamp(),
         lastLogin: serverTimestamp(),
