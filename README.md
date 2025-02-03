@@ -1,4 +1,5 @@
-# 🚀 AI-Assisted Online Code Editor
+# ⚡ SynapseCode
+An AI-Assisted Online Code Editor with Real-Time Collaboration
 
 ## 📌 Overview
 This project is a **cutting-edge AI-assisted online code editor** designed to provide a seamless, intelligent, and highly collaborative coding experience. It features **AI-powered syntax correction**, **smart documentation generation**, and **real-time multi-developer collaboration** to enhance productivity and ensure high-quality code. With **live workspace synchronization**, developers can work together in shared environments, edit files simultaneously, and communicate through an integrated chat system. Built with a modern tech stack, this editor ensures an intuitive and efficient workflow for teams and individual developers alike.
