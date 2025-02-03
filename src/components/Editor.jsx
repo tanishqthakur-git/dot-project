@@ -82,7 +82,6 @@ export default function CodeEditor({ file }) {
 
   const onSelect = (codeLanguage) => {
     setCodeLanguage(codeLanguage);
-    setUpdatedCode(CODE_SNIPPETS[codeLanguage]);
   };
 
   const onMount = (editor) => {

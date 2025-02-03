@@ -15,7 +15,7 @@ const languages = Object.entries(LANGUAGE_VERSIONS);
 const active_color = "blue.400";
 const LanguageSelector = ({ language, onSelect }) => {
   return (
-    <Box className="z-10 flex items-center">
+    <Box className=" flex items-center">
       <p className="mr-2">Language:</p>
       <MenuRoot isLazy>
         <MenuTrigger asChild>

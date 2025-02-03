@@ -95,9 +95,9 @@ const Workspace = () => {
 
       {/* Chat Panel (Overlapping from Bottom) */}
       <aside
-        className={`fixed bottom-0 right-0 transition-all duration-300 bg-gray-900 border-t border-gray-800 shadow-lg ${
-          isChatOpen ? "h-[83%]" : "h-0"
-        } overflow-hidden w-[30%]`}
+        className={`fixed bottom-0 right-0 transition-all duration-300  shadow-lg ${
+          isChatOpen ? "h-[82%]" : "h-0"
+        } overflow-hidden w-[45%]`}
       >
         {isChatOpen && (
             <Chat workspaceId={workspaceId} isChatOpen={isChatOpen} setIsChatOpen={setIsChatOpen} />
@@ -108,10 +108,10 @@ const Workspace = () => {
       {
         !isChatOpen && (
             <button
-              className="fixed bottom-4 right-4 z-30 p-3 bg-gray-700 hover:bg-gray-600 text-white rounded-full shadow-lg"
+              className="fixed bottom-6 right-10 z-30 py-3 font-mono px-5 flex items-center gap-2 text-xl bg-teal-700/30 ring-1 ring-teal-500  animate-bounce  hover:bg-teal-800 text-white rounded-full shadow-lg"
               onClick={() => setIsChatOpen(!isChatOpen)}
             >
-            <MessageCircle className="h-6 w-6" />
+             <MessageCircle className="h-8 w-8 " /> AI-Chat
           </button>
         )
       }

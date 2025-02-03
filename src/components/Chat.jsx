@@ -16,10 +16,10 @@ import {
 } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { ClipboardDocumentIcon, CheckIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
+import { MessageSquarePlus, Send, Sparkles, Trash, Trash2, X, XCircle } from "lucide-react";
 
 function Chatroom({ workspaceId, setIsChatOpen }) {
   const [messages, setMessages] = useState([]);
@@ -61,12 +61,22 @@ function Chatroom({ workspaceId, setIsChatOpen }) {
   const generateAIResponse = async (prompt) => {
     setIsAIProcessing(true);
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
+      const response = await fetch('/api/getChatResponse', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: prompt }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('API request failed');
+      }
+  
+      const data = await response.json();
+      return data.aiResponse;
     } catch (error) {
-      console.error("AI Error:", error);
+      console.error("API Error:", error);
       return "Sorry, I couldn't process that request. Please try again.";
     } finally {
       setIsAIProcessing(false);
@@ -81,9 +91,9 @@ function Chatroom({ workspaceId, setIsChatOpen }) {
     let aiPrompt = null;
     let userMessage = newMessage;
 
+    console.log(aiMatch);
     if (aiMatch) {
       aiPrompt = aiMatch[1].trim();
-      userMessage = newMessage.replace(/@.+/, '').trim();
     }
 
     try {
@@ -140,18 +150,56 @@ function Chatroom({ workspaceId, setIsChatOpen }) {
   const MessageBubble = ({ msg }) => {
     const isCurrentUser = msg.userId === userId;
     const isAI = msg.userId === "AI_BOT";
+    const [copiedCode, setCopiedCode] = useState(null);
+
+    const parseMessage = (text) => {
+      const parts = [];
+      const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+      let lastIndex = 0;
+      let match;
+
+      while ((match = codeBlockRegex.exec(text)) !== null) {
+        const [fullMatch, lang, code] = match;
+        const startIndex = match.index;
+        const endIndex = codeBlockRegex.lastIndex;
+
+        if (startIndex > lastIndex) {
+          parts.push({
+            type: 'text',
+            content: text.substring(lastIndex, startIndex)
+          });
+        }
+
+        parts.push({
+          type: 'code',
+          lang: lang || 'text',
+          code: code.trim()
+        });
+
+        lastIndex = endIndex;
+      }
+
+      if (lastIndex < text.length) {
+        parts.push({
+          type: 'text',
+          content: text.substring(lastIndex)
+        });
+      }
+
+      return parts;
+    };
+
+    const copyToClipboard = async (code, index) => {
+      await navigator.clipboard.writeText(code);
+      setCopiedCode(index);
+      setTimeout(() => setCopiedCode(null), 2000);
+    };
 
     return (
-      <div
-  className={`flex flex-col gap-1 ${
-    isCurrentUser
-      ? "items-end"
-      : isAI
-      ? "items-center w-full" // Ensure AI messages take full width
-      : "items-start"
-  }`}
->
-
+      <div className={`flex flex-col gap-1  ${
+        isCurrentUser ? "items-end" : 
+        isAI ? "items-center w-full" : "items-start"
+      }`}>
         {!isAI && (
           <span className="text-xs text-gray-400">
             {isCurrentUser ? "You" : msg.name}
@@ -167,18 +215,58 @@ function Chatroom({ workspaceId, setIsChatOpen }) {
             />
           )}
 
-          <div
-            className={`py-2 px-4 text-sm rounded-2xl mx-auto max-w-[80%] break-words ${
-              isAI ? "bg-blue-900/40 border border-blue-800/50" :
-              isCurrentUser 
-                ? "bg-purple-600/40" 
-                : "bg-gray-800/40"
-            }`}
-          >
+          <div className={`py-2 px-4 text-sm rounded-2xl mx-auto max-w-[550px] break-words ${
+            isAI ? "bg-green-900/20 border ring-1 ring-green-400" :
+            isCurrentUser ? "bg-purple-600/60" : "bg-blue-600/60 "
+          }`}>
             {isAI && <span className="text-blue-400 mr-2">⚡</span>}
-            {msg.text}
+            
+            {parseMessage(msg.text).map((part, index) => {
+              if (part.type === 'text') {
+                return (
+                  <span key={index} className="whitespace-pre-wrap">
+                    {part.content}
+                  </span>
+                );
+              }
+              
+              if (part.type === 'code') {
+                return (
+                  <div key={index} className="relative my-2 group">
+                    <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => copyToClipboard(part.code, index)}
+                        className="p-1 rounded bg-gray-700/50 hover:bg-gray-600/50 backdrop-blur-sm"
+                      >
+                        {copiedCode === index ? (
+                          <CheckIcon className="h-4 w-4 text-green-400" />
+                        ) : (
+                          <ClipboardDocumentIcon className="h-4 w-4 text-gray-300" />
+                        )}
+                      </button>
+                    </div>
+                    <SyntaxHighlighter
+                      language={part.lang}
+                      style={vscDarkPlus}
+                      customStyle={{
+                        background: '#000',
+                        borderRadius: '0.5rem',
+                        padding: '1rem',
+                        margin: '0.5rem 0'
+                      }}
+                      codeTagProps={{ style: { fontFamily: 'Fira Code, monospace' } }}
+                    >
+                      {part.code}
+                    </SyntaxHighlighter>
+                  </div>
+                );
+              }
+              
+              return null;
+            })}
+
             {isAI && (
-              <div className="text-xs text-blue-400/70 mt-1">
+              <div className="text-xs text-green-200/70 mt-1">
                 AI-generated response
               </div>
             )}
@@ -205,86 +293,99 @@ function Chatroom({ workspaceId, setIsChatOpen }) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-900/80 backdrop-blur-lg border border-gray-800 rounded-xl shadow-xl">
-      {/* Header */}
-      <div className="flex justify-between items-center p-4 border-b border-gray-800">
-        <h2 className="text-xl font-semibold text-gray-200">
-          Workspace Chat
-          <span className="text-blue-400 ml-2 text-sm">@AI</span>
-        </h2>
+    <div className="flex flex-col h-full backdrop-blur-sm border border-gray-500 rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-300 hover:shadow-3xl">
+      {/* Header with glass effect */}
+      <div className="flex justify-between items-center p-4 bg-gray-950/60 backdrop-blur-xl border-b-2 border-gray-600 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-indigo-900/20 rounded-lg border border-indigo-200/20">
+            <Sparkles className="h-6 w-6 text-indigo-200" />
+          </div>
+          <h2 className="text-xl font-semibold shadow-2xl text-gray-100">
+            Collaborative AI Chat
+            <span className="text-indigo-400/90 text-sm font-normal ml-2">v1.2</span>
+          </h2>
+        </div>
         <div className="flex gap-2">
-          <button
+          <Button
             onClick={clearChat}
-            className="px-3 py-1 text-sm bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg border border-red-400/30 transition-colors"
+            className="px-3 py-2 text-sm bg-gray-700/50 hover:bg-gray-600/60 text-gray-300 rounded-xl flex items-center gap-2 transition-all duration-200 hover:scale-[1.02]"
           >
-            Clear
-          </button>
-          <button
+            <Trash className="h-4 w-4 text-red-500" />
+            <span>Clear</span>
+          </Button>
+          <Button
             onClick={() => setIsChatOpen(false)}
-            className="p-1.5 hover:bg-gray-800/50 rounded-lg text-gray-400 hover:text-gray-200 transition-colors"
+            className="p-2 bg-gray-700/50 hover:bg-gray-600/60 text-white rounded-xl transition-all duration-200 hover:scale-[1.02]"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+            <X className="h-5 w-5" />
+          </Button>
         </div>
       </div>
 
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-800/60 ">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500 text-sm ">
-            <p>No messages yet</p>
-            <p className="text-xs mt-1 text-gray-600">
-              Type @ followed by your question to ask AI
-            </p>
+          <div className="flex flex-col items-center justify-center h-full text-gray-500 text-sm animate-fade-in">
+            <div className="mb-4 animate-float">
+              <MessageSquarePlus className="h-8 w-8 opacity-60" />
+            </div>
+            <p>Start a conversation with AI</p>
+            <p className="text-sm mt-1 text-gray-500/70">Type @ followed by your query</p>
           </div>
         ) : (
-          messages.map((msg) => <MessageBubble key={msg.id} msg={msg} />)
+          messages.map((msg) => (
+            <MessageBubble 
+              key={msg.id} 
+              msg={msg}
+              className="animate-message-enter"
+            />
+          ))
         )}
 
         {isAIProcessing && (
-          <div className="flex justify-center">
-            <div className="flex items-center gap-2 text-blue-400 text-sm py-2 px-4 rounded-full bg-blue-900/20">
-              <div className="animate-spin">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z"/>
-                </svg>
+          <div className="flex justify-center animate-pulse">
+            <div className="flex items-center gap-3 text-indigo-300 text-sm py-2 px-4 rounded-full bg-gray-700/50 border border-indigo-500/20">
+              <div className="flex space-x-1">
+                <div className="h-2 w-2 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay: '0s'}} />
+                <div className="h-2 w-2 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}} />
+                <div className="h-2 w-2 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}} />
               </div>
-              <span>CodeBot is generating response...</span>
+              <span>Analyzing request...</span>
             </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="p-4 border-t border-gray-800">
+      {/* Input Section */}
+      <div className="p-4 border-t border-gray-600/30 bg-gray-800/60 backdrop-blur-sm">
         <form 
           onSubmit={(e) => {
             e.preventDefault();
             sendMessage();
           }}
-          className="flex gap-2"
+          className="flex gap-3"
         >
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type a message... Use @ to ask AI"
-            className="flex-1 bg-gray-800/50 border border-gray-700 focus:border-gray-600 text-white placeholder-gray-500 rounded-xl backdrop-blur-sm"
+            placeholder="Type your message... (@ for AI commands)"
+            className="flex-1 bg-gray-700/40 border border-gray-600/30 text-gray-200 placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent transition-all"
           />
           <Button 
             type="submit" 
             disabled={isAIProcessing}
-            className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6 transition-all"
+            className="bg-indigo-600/80 hover:bg-indigo-500/90 text-gray-100 rounded-xl px-6 flex items-center gap-2 transition-all duration-200 hover:scale-[1.02] group"
           >
-            Send
+            <PaperAirplaneIcon className="h-5 w-5 text-indigo-100 group-hover:translate-x-0.5 transition-transform" />
+            <span>Send</span>
           </Button>
         </form>
       </div>
     </div>
   );
 }
+
 
 export default Chatroom;
