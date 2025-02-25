@@ -31,7 +31,7 @@ function Chatroom({ workspaceId, setIsChatOpen }) {
   const name = auth.currentUser.displayName;
 
   const messagesRef = collection(firestore, "messages");
-  const messagesQuery = query(messagesRef, orderBy("createdAt"), limit(25));
+  const messagesQuery = query(messagesRef, orderBy("createdAt"));
 
   const messagesEndRef = useRef(null);
 

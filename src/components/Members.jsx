@@ -74,7 +74,7 @@ export default function ShowMembers({ workspaceId }) {
     <div className="relative">
       {/* Stacked Member Avatars */}
       <div className="flex gap-2 text-sm items-center">
-         People: {members.length}
+       👥 People: {members.length}
         <div className="flex -space-x-4 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
           {members.slice(0, 4).map((member, index) => (
             <img

@@ -233,7 +233,7 @@ const Dashboard = () => {
                         <div className="flex justify-between items-center">
                           <p className="text-sm text-yellow-400 font-medium">Role: {ws.role}</p>
                           <span className="text-lg text-gray-200 bg-gray-900 px-4 py-2 rounded-full flex items-center gap-2 border border-gray-700">
-                            👥 People: <ShowMembers workspaceId={ws.id} />
+                            <ShowMembers workspaceId={ws.id} />
                           </span>
                         </div>
                       </div>
