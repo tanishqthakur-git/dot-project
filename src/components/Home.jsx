@@ -8,10 +8,33 @@ import { useEffect, useRef } from "react";
 
 export default function HomePage() {
   const features = [
-    { icon: <Users />, title: "Real-time Collaboration", description: "ork together seamlessly with live code editing and live cursor support.", titleColor: "text-green-400" },
-    { icon: <Sparkles />, title: "AI-driven Tools", description: "Get intelligent code suggestions instantly with comprehensive documentation.", titleColor: "text-yellow-400" },
-    { icon: <Code />, title: "Smart Linting", description: "Identify and fix syntax errors effortlessly as you type with smart AI suggestions.", titleColor: "text-red-400" },
-    { icon: <GitBranch />, title: "Real-time Chatbot Support", description: "Integrated AI chat bot for instant help and guidance.", titleColor: "text-purple-400" },
+    {
+      icon: <Users />,
+      title: "Real-time Collaboration",
+      description:
+        "ork together seamlessly with live code editing and live cursor support.",
+      titleColor: "text-green-400",
+    },
+    {
+      icon: <Sparkles />,
+      title: "AI-driven Tools",
+      description:
+        "Get intelligent code suggestions instantly with comprehensive documentation.",
+      titleColor: "text-yellow-400",
+    },
+    {
+      icon: <Code />,
+      title: "Smart Linting",
+      description:
+        "Identify and fix syntax errors effortlessly as you type with smart AI suggestions.",
+      titleColor: "text-red-400",
+    },
+    {
+      icon: <GitBranch />,
+      title: "Real-time Chatbot Support",
+      description: "Integrated AI chat bot for instant help and guidance.",
+      titleColor: "text-purple-400",
+    },
   ];
 
   const testimonialRef = useRef(null);
@@ -47,11 +70,11 @@ export default function HomePage() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
           >
-            <Button 
+            <Button
               className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-full px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => window.location.href = "/register"}
+              whilehover={{ scale: 1.05 }}
+              whiletap={{ scale: 0.95 }}
+              onClick={() => (window.location.href = "/register")}
             >
               Get Started - It's Free
             </Button>
@@ -71,9 +94,9 @@ export default function HomePage() {
               opacity: 1,
               transition: {
                 delayChildren: 0.3,
-                staggerChildren: 0.2
-              }
-            }
+                staggerChildren: 0.2,
+              },
+            },
           }}
         >
           {features.map((feature, index) => (
@@ -81,7 +104,7 @@ export default function HomePage() {
               key={index}
               variants={{
                 hidden: { y: 20, opacity: 0 },
-                visible: { y: 0, opacity: 1 }
+                visible: { y: 0, opacity: 1 },
               }}
             >
               <FeatureCard {...feature} />
@@ -114,18 +137,20 @@ export default function HomePage() {
             <p className="text-blue-400 flex items-center">
               <span className="text-purple-400">function</span>
               <span className="mx-2">welcome()</span>{" "}
-              <span className="ml-2 text-gray-500">{'{'}</span>
+              <span className="ml-2 text-gray-500">{"{"}</span>
             </p>
             <p className="text-green-400 ml-4 flex items-center">
               <span className="text-yellow-400">console</span>
               <span className="mx-2 text-white">.</span>
               <span className="text-blue-400">log</span>
               <span className="mx-2 text-white">(</span>
-              <span className="text-green-300">"✨ Welcome to the Future of Coding ✨"</span>
+              <span className="text-green-300">
+                "✨ Welcome to the Future of Coding ✨"
+              </span>
               <span className="text-white">)</span>
               <span className="ml-2 animate-pulse">|</span>
             </p>
-            <p className="text-blue-400">{'}'}</p>
+            <p className="text-blue-400">{"}"}</p>
           </motion.div>
         </motion.div>
       </section>
@@ -179,7 +204,9 @@ function FeatureCard({ icon, title, description, titleColor }) {
           >
             {icon}
           </motion.div>
-          <h3 className={`text-xl font-semibold mb-2 ${titleColor}`}>{title}</h3>
+          <h3 className={`text-xl font-semibold mb-2 ${titleColor}`}>
+            {title}
+          </h3>
           <p className="text-gray-400 group-hover:text-gray-300 transition-colors">
             {description}
           </p>
@@ -198,7 +225,9 @@ function Testimonial({ name, feedback, animationDelay }) {
     >
       <Card className="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 hover:border-purple-400 transition-colors">
         <CardContent className="relative">
-          <div className="absolute top-0 left-0 text-6xl text-gray-700 opacity-50">“</div>
+          <div className="absolute top-0 left-0 text-6xl text-gray-700 opacity-50">
+            “
+          </div>
           <p className="italic text-gray-300 pt-8 px-4">{feedback}</p>
           <p className="text-blue-400 mt-4 font-medium">- {name}</p>
         </CardContent>
