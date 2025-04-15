@@ -1,0 +1,5 @@
+image:
+  repository: tanishqthakur/haxplore
+  pullPolicy: IfNotPresent
+  tag: "latest"
+

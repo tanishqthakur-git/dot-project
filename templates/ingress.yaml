@@ -1,0 +1,22 @@
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: haxplore-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  labels:
+    app: haxplore
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: a1b20d132fd354662885765a2e7b2911-ded3eee2329197ea.elb.ap-south-1.amazonaws.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: haxplore-service
+                port:
+                  number: 80
